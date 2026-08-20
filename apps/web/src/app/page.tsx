@@ -1,3 +1,8 @@
+import { redirect } from 'next/navigation';
+
+import { auth, signOut } from '@/auth';
+import { getCurrentUser } from '@/lib/api';
+
 const services = [
   {
     title: 'Kantin',
@@ -19,9 +24,52 @@ const services = [
   },
 ] as const;
 
-export default function Home() {
+export default async function Home() {
+  const session = await auth();
+
+  if (!session?.user) {
+    redirect('/login');
+  }
+
+  const currentUser = session.apiAccessToken
+    ? await getCurrentUser(session.apiAccessToken)
+    : null;
+  const displayName = currentUser?.profile
+    ? `${currentUser.profile.first_name} ${currentUser.profile.last_name}`
+    : (session.user.name ?? 'Yurt kullanıcısı');
+  const phone =
+    currentUser?.profile?.phone_e164 ??
+    currentUser?.identity.preferredUsername ??
+    'Profil kaydı bekleniyor';
+
   return (
     <main className="portal-shell">
+      <nav className="account-bar" aria-label="Hesap bilgileri">
+        <div>
+          <strong>{displayName}</strong>
+          <span>{phone}</span>
+        </div>
+        <div className="account-actions">
+          <span className="role-count">{session.user.roles.length} yetki</span>
+          <form
+            action={async () => {
+              'use server';
+              await signOut({ redirectTo: '/login' });
+            }}
+          >
+            <button className="text-action" type="submit">
+              Çıkış yap
+            </button>
+          </form>
+        </div>
+      </nav>
+
+      {session.authError ? (
+        <p className="session-warning" role="alert">
+          Oturum yenilenemedi. Güvenli biçimde yeniden giriş yapmalısın.
+        </p>
+      ) : null}
+
       <header className="portal-header">
         <div>
           <p className="eyebrow">Yurt içi hizmet ağı</p>
@@ -36,7 +84,7 @@ export default function Home() {
         >
           <span>Ortak bakiye</span>
           <strong>—</strong>
-          <small>Giriş sonrasında görüntülenecek</small>
+          <small>Cüzdan aşamasında etkinleşecek</small>
         </div>
       </header>
 

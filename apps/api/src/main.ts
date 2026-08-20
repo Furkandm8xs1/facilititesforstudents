@@ -11,6 +11,7 @@ async function bootstrap() {
     origin: process.env.CORS_ORIGIN ?? 'http://localhost:3000',
     credentials: true,
   });
+  app.enableShutdownHooks();
 
   await app.listen(port, '0.0.0.0');
 }

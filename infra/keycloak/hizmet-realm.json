@@ -41,6 +41,56 @@
   },
   "clientScopes": [
     {
+      "name": "profile",
+      "description": "OpenID Connect profile bilgileri",
+      "protocol": "openid-connect",
+      "attributes": {
+        "display.on.consent.screen": "false",
+        "include.in.token.scope": "true"
+      },
+      "protocolMappers": [
+        {
+          "name": "full-name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-full-name-mapper",
+          "consentRequired": false,
+          "config": {
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "given-name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "firstName",
+            "claim.name": "given_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        },
+        {
+          "name": "family-name",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-usermodel-attribute-mapper",
+          "consentRequired": false,
+          "config": {
+            "user.attribute": "lastName",
+            "claim.name": "family_name",
+            "jsonType.label": "String",
+            "id.token.claim": "true",
+            "access.token.claim": "true",
+            "userinfo.token.claim": "true"
+          }
+        }
+      ]
+    },
+    {
       "name": "portal-api-access",
       "description": "Portal API için kullanıcı adı, rol ve audience claim'leri",
       "protocol": "openid-connect",
@@ -112,7 +162,9 @@
       "name": "Yurt Portalı Web",
       "enabled": true,
       "protocol": "openid-connect",
-      "publicClient": true,
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "hizmet-local-web-secret",
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
@@ -122,7 +174,8 @@
         "pkce.code.challenge.method": "S256",
         "post.logout.redirect.uris": "http://localhost:3000/*"
       },
-      "defaultClientScopes": ["portal-api-access"]
+      "defaultClientScopes": ["portal-api-access"],
+      "optionalClientScopes": ["profile"]
     },
     {
       "clientId": "portal-api",

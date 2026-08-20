@@ -3,3 +3,4 @@ coverage
 dist
 node_modules
 package-lock.json
+apps/web/next-env.d.ts

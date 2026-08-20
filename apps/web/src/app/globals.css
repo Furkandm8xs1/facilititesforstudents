@@ -40,10 +40,109 @@ input {
   font: inherit;
 }
 
+button {
+  cursor: pointer;
+}
+
 .portal-shell {
   width: min(1120px, calc(100% - 40px));
   margin: 0 auto;
   padding: 72px 0 96px;
+}
+
+.account-bar {
+  display: flex;
+  gap: 24px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+  margin-bottom: 56px;
+  background: rgb(255 253 248 / 72%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+}
+
+.account-bar > div:first-child {
+  display: grid;
+  gap: 3px;
+}
+
+.account-bar span {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.account-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.role-count {
+  padding: 7px 10px;
+  background: var(--accent-soft);
+  border-radius: 999px;
+}
+
+.text-action {
+  padding: 7px 0;
+  color: var(--accent);
+  background: transparent;
+  border: 0;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.session-warning {
+  padding: 14px 18px;
+  margin: -36px 0 48px;
+  color: #713f12;
+  background: #fef3c7;
+  border: 1px solid #f4d991;
+  border-radius: 14px;
+}
+
+.login-shell {
+  display: grid;
+  min-height: 100vh;
+  padding: 32px;
+  place-items: center;
+}
+
+.login-card {
+  width: min(620px, 100%);
+  padding: clamp(32px, 7vw, 68px);
+  background: rgb(255 253 248 / 92%);
+  border: 1px solid var(--border);
+  border-radius: 32px;
+  box-shadow: 0 28px 80px rgb(54 69 60 / 12%);
+}
+
+.login-card h1 {
+  margin-bottom: 24px;
+  font-size: clamp(2.5rem, 7vw, 4.6rem);
+}
+
+.login-card form {
+  margin-top: 38px;
+}
+
+.primary-action {
+  width: 100%;
+  padding: 16px 20px;
+  color: white;
+  background: var(--accent);
+  border: 0;
+  border-radius: 14px;
+  font-weight: 750;
+  box-shadow: 0 14px 34px rgb(29 107 79 / 18%);
+}
+
+.login-note {
+  margin: 20px 0 0;
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.6;
 }
 
 .portal-header {
@@ -203,6 +302,15 @@ h2 {
 }
 
 @media (max-width: 520px) {
+  .login-shell {
+    padding: 14px;
+  }
+
+  .account-bar {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
   .portal-shell {
     width: min(100% - 28px, 1120px);
     padding-top: 40px;
