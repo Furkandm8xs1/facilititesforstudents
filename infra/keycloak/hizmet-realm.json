@@ -39,6 +39,16 @@
       ]
     }
   },
+  "users": [
+    {
+      "username": "service-account-portal-admin-service",
+      "enabled": true,
+      "serviceAccountClientId": "portal-admin-service",
+      "clientRoles": {
+        "realm-management": ["manage-users"]
+      }
+    }
+  ],
   "clientScopes": [
     {
       "name": "profile",
@@ -99,6 +109,16 @@
         "include.in.token.scope": "false"
       },
       "protocolMappers": [
+        {
+          "name": "subject",
+          "protocol": "openid-connect",
+          "protocolMapper": "oidc-sub-mapper",
+          "consentRequired": false,
+          "config": {
+            "access.token.claim": "true",
+            "introspection.token.claim": "true"
+          }
+        },
         {
           "name": "preferred-username",
           "protocol": "openid-connect",
@@ -178,6 +198,19 @@
       "optionalClientScopes": ["profile"]
     },
     {
+      "clientId": "portal-admin-service",
+      "name": "Portal Kullanıcı Yönetimi Servisi",
+      "enabled": true,
+      "protocol": "openid-connect",
+      "publicClient": false,
+      "clientAuthenticatorType": "client-secret",
+      "secret": "hizmet-local-admin-service-secret",
+      "standardFlowEnabled": false,
+      "directAccessGrantsEnabled": false,
+      "serviceAccountsEnabled": true
+    },
+    {
+      "id": "844594e4-a183-46a3-80a7-97fdb6236d20",
       "clientId": "portal-api",
       "name": "Yurt Portalı API",
       "enabled": true,

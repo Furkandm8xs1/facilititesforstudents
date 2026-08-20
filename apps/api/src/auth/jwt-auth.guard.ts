@@ -2,6 +2,7 @@ import {
   CanActivate,
   ExecutionContext,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
@@ -12,6 +13,8 @@ import { IS_PUBLIC_KEY } from './public.decorator';
 
 @Injectable()
 export class JwtAuthGuard implements CanActivate {
+  private readonly logger = new Logger(JwtAuthGuard.name);
+
   constructor(
     private readonly reflector: Reflector,
     private readonly keycloakJwt: KeycloakJwtService,
@@ -37,7 +40,10 @@ export class JwtAuthGuard implements CanActivate {
     try {
       request.user = await this.keycloakJwt.verify(authorization.slice(7));
       return true;
-    } catch {
+    } catch (error) {
+      this.logger.warn(
+        `Erişim belirteci doğrulanamadı: ${error instanceof Error ? error.message : 'bilinmeyen hata'}`,
+      );
       throw new UnauthorizedException('Erişim belirteci doğrulanamadı.');
     }
   }

@@ -6,6 +6,28 @@ import type { JWT } from 'next-auth/jwt';
 const keycloakIssuer = process.env.AUTH_KEYCLOAK_ISSUER!;
 const keycloakClientId = process.env.AUTH_KEYCLOAK_ID!;
 const keycloakClientSecret = process.env.AUTH_KEYCLOAK_SECRET!;
+const applicationRoles = new Set([
+  'portal_user',
+  'platform_admin',
+  'canteen_manager',
+  'canteen_operator',
+  'wallet_cashier',
+]);
+
+function filterApplicationRoles(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return [
+    ...new Set(
+      value.filter(
+        (role): role is string =>
+          typeof role === 'string' && applicationRoles.has(role),
+      ),
+    ),
+  ];
+}
 
 function rolesFromAccessToken(accessToken: string): string[] {
   try {
@@ -19,9 +41,21 @@ function rolesFromAccessToken(accessToken: string): string[] {
       ...(Array.isArray(portalApiRoles) ? portalApiRoles : []),
     ];
 
-    return roles.filter((role): role is string => typeof role === 'string');
+    return filterApplicationRoles(roles);
   } catch {
     return [];
+  }
+}
+
+function accessTokenHasSubject(accessToken: unknown): boolean {
+  if (typeof accessToken !== 'string') {
+    return false;
+  }
+
+  try {
+    return typeof decodeJwt(accessToken).sub === 'string';
+  } catch {
+    return false;
   }
 }
 
@@ -103,7 +137,11 @@ const config = {
       const expiresAt =
         typeof token.expiresAt === 'number' ? token.expiresAt : undefined;
 
-      if (expiresAt && Date.now() < expiresAt * 1000 - 30_000) {
+      if (
+        expiresAt &&
+        Date.now() < expiresAt * 1000 - 30_000 &&
+        accessTokenHasSubject(token.accessToken)
+      ) {
         return token;
       }
 
@@ -111,9 +149,7 @@ const config = {
     },
     session({ session, token }) {
       session.user.id = token.sub ?? '';
-      session.user.roles = Array.isArray(token.roles)
-        ? token.roles.filter((role): role is string => typeof role === 'string')
-        : [];
+      session.user.roles = filterApplicationRoles(token.roles);
       session.apiAccessToken =
         typeof token.accessToken === 'string' ? token.accessToken : undefined;
       session.authError =

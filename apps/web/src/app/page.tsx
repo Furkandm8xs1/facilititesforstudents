@@ -1,3 +1,4 @@
+import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { auth, signOut } from '@/auth';
@@ -51,6 +52,11 @@ export default async function Home() {
         </div>
         <div className="account-actions">
           <span className="role-count">{session.user.roles.length} yetki</span>
+          {session.user.roles.includes('platform_admin') ? (
+            <Link className="text-action" href="/admin/users/new">
+              Kullanıcı ekle
+            </Link>
+          ) : null}
           <form
             action={async () => {
               'use server';

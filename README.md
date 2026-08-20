@@ -53,3 +53,9 @@ Yerel adresler:
 
 Portal giriş bilgilerini Keycloak yönetir. API sağlık kontrolü herkese açıktır;
 diğer API uçları geçerli bir `portal-api` erişim belirteci ister.
+
+`platform_admin` rolündeki kullanıcılar portalın **Kullanıcı ekle** bağlantısından
+telefon numarası, geçici parola ve servis rolleriyle hesap oluşturabilir. Yeni
+hesap ilk girişinde parolasını değiştirmek zorundadır. API, Keycloak işlemi ile
+PostgreSQL profil kaydından biri başarısız olursa yeni hesabı telafi ederek yarım
+kayıt bırakmaz.
