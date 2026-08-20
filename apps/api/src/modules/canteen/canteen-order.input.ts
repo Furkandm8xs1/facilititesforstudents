@@ -3,11 +3,9 @@ import { BadRequestException } from '@nestjs/common';
 const uuidPattern =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 const statuses = [
-  'ACCEPTED',
   'PREPARING',
   'READY',
   'DELIVERED',
-  'REJECTED',
   'CANCELLED_BY_CANTEEN',
 ] as const;
 
@@ -104,23 +102,13 @@ export function parseOrderId(value: unknown): string {
 
 export function parseOrderTransitionInput(value: unknown): {
   status: ManagementOrderStatus;
-  deliveryCode: string | null;
 } {
   if (!isRecord(value) || !statuses.includes(value.status as never)) {
     throw new BadRequestException('Sipariş durumu geçerli değil.');
   }
 
   const status = value.status as ManagementOrderStatus;
-  const deliveryCode = text(value.deliveryCode);
-
-  if (status === 'DELIVERED' && !/^[0-9]{6}$/.test(deliveryCode)) {
-    throw new BadRequestException({
-      message: 'Teslim kodu geçerli değil.',
-      errors: { deliveryCode: 'Kullanıcının 6 haneli teslim kodunu girin.' },
-    });
-  }
-
-  return { status, deliveryCode: deliveryCode || null };
+  return { status };
 }
 
 export function parseOrderingInput(value: unknown): boolean {

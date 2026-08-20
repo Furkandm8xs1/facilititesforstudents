@@ -260,8 +260,6 @@ export class CanteenService {
         throw new ConflictException(
           'Sipariş mevcut durumunda bu işleme uygun değil.',
         );
-      case 'DELIVERY_CODE_INVALID':
-        throw new BadRequestException('Teslim kodu doğru değil.');
       case 'IDEMPOTENCY_CONFLICT':
         throw new ConflictException(
           'Sipariş güvenlik anahtarı başka bir işlemde kullanılmış.',

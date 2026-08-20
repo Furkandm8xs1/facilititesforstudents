@@ -64,13 +64,15 @@ describe('canteen order input', () => {
     ).toThrow(BadRequestException);
   });
 
-  it('requires the delivery code only for delivery', () => {
+  it('accepts direct preparation and delivery transitions', () => {
+    expect(parseOrderTransitionInput({ status: 'PREPARING' })).toEqual({
+      status: 'PREPARING',
+    });
     expect(parseOrderTransitionInput({ status: 'READY' })).toEqual({
       status: 'READY',
-      deliveryCode: null,
     });
-    expect(() =>
-      parseOrderTransitionInput({ status: 'DELIVERED', deliveryCode: '12' }),
-    ).toThrow(BadRequestException);
+    expect(parseOrderTransitionInput({ status: 'DELIVERED' })).toEqual({
+      status: 'DELIVERED',
+    });
   });
 });

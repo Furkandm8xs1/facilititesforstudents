@@ -105,19 +105,16 @@ export interface CanteenMutationResult {
 
 export type CanteenOrderStatus =
   | 'PLACED'
-  | 'ACCEPTED'
   | 'PREPARING'
   | 'READY'
   | 'DELIVERED'
   | 'CANCELLED'
-  | 'REJECTED'
   | 'CANCELLED_BY_CANTEEN';
 
 export interface CanteenOrder {
   id: string;
   status: CanteenOrderStatus;
   totalMinor: string;
-  deliveryCode: string;
   customerName: string;
   customerPhone: string;
   items: Array<{
@@ -336,7 +333,7 @@ export function placeCanteenOrder(
     'POST',
     '/canteen/orders',
     payload,
-    'Sipariş alındı. Tutar bakiyenden bloke edildi.',
+    'Sipariş alındı. Tutar bakiyenden düşüldü.',
   );
 }
 
@@ -346,14 +343,14 @@ export function cancelCanteenOrder(accessToken: string, orderId: string) {
     'POST',
     `/canteen/orders/${encodeURIComponent(orderId)}/cancel`,
     {},
-    'Sipariş iptal edildi; bakiye ve stok blokesi kaldırıldı.',
+    'Sipariş iptal edildi; tutar bakiyene, ürünler stoğa iade edildi.',
   );
 }
 
 export function transitionCanteenOrder(
   accessToken: string,
   orderId: string,
-  payload: { status: CanteenOrderStatus; deliveryCode?: string },
+  payload: { status: CanteenOrderStatus },
 ) {
   return canteenMutation(
     accessToken,

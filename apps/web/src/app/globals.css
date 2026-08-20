@@ -870,8 +870,7 @@ h2 {
   align-items: end;
 }
 
-.catalog-order-form label,
-.delivery-code-input {
+.catalog-order-form label {
   display: grid;
   gap: 7px;
   color: var(--muted);
@@ -879,8 +878,7 @@ h2 {
   font-weight: 750;
 }
 
-.catalog-order-form input,
-.delivery-code-input input {
+.catalog-order-form input {
   width: 100%;
   padding: 12px;
   color: var(--foreground);
@@ -974,27 +972,9 @@ h2 {
 }
 
 .order-status-CANCELLED,
-.order-status-REJECTED,
 .order-status-CANCELLED_BY_CANTEEN {
   color: var(--muted);
   background: #e7e9e5;
-}
-
-.delivery-code {
-  display: flex;
-  gap: 20px;
-  align-items: center;
-  justify-content: space-between;
-  padding: 18px;
-  margin-bottom: 18px;
-  color: white;
-  background: var(--accent);
-  border-radius: 14px;
-}
-
-.delivery-code strong {
-  font-size: 1.8rem;
-  letter-spacing: 0.16em;
 }
 
 .ordering-control {
@@ -1032,10 +1012,6 @@ h2 {
 .management-order-card .primary-action {
   width: fit-content;
   padding: 11px 14px;
-}
-
-.delivery-code-input {
-  max-width: 260px;
 }
 
 .catalog-stock {

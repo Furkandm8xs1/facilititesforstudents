@@ -1,5 +1,3 @@
-import { randomInt } from 'node:crypto';
-
 import { Injectable } from '@nestjs/common';
 import type { PoolClient } from 'pg';
 
@@ -9,12 +7,10 @@ import { CanteenRuleError } from './canteen.errors';
 
 export type CanteenOrderStatus =
   | 'PLACED'
-  | 'ACCEPTED'
   | 'PREPARING'
   | 'READY'
   | 'DELIVERED'
   | 'CANCELLED'
-  | 'REJECTED'
   | 'CANCELLED_BY_CANTEEN';
 
 export interface CanteenOrderItemView {
@@ -29,7 +25,6 @@ export interface CanteenOrderView {
   id: string;
   status: CanteenOrderStatus;
   totalMinor: string;
-  deliveryCode: string;
   customerName: string;
   customerPhone: string;
   items: CanteenOrderItemView[];
@@ -43,7 +38,6 @@ interface OrderRow {
   customer_user_profile_id: string;
   status: CanteenOrderStatus;
   total_minor: string;
-  delivery_code: string;
   customer_name: string;
   customer_phone: string;
   items: Array<{
@@ -61,7 +55,6 @@ interface CustomerAccountRow {
   profile_id: string;
   account_id: string;
   available_minor: string;
-  held_minor: string;
 }
 
 interface StoreRow {
@@ -86,10 +79,7 @@ interface LockedOrderRow {
   customer_user_profile_id: string;
   status: CanteenOrderStatus;
   total_minor: string;
-  delivery_code: string;
   account_id: string;
-  available_minor: string;
-  held_minor: string;
 }
 
 interface LockedOrderBaseRow {
@@ -98,13 +88,10 @@ interface LockedOrderBaseRow {
   customer_user_profile_id: string;
   status: CanteenOrderStatus;
   total_minor: string;
-  delivery_code: string;
 }
 
 interface LockedAccountRow {
   account_id: string;
-  available_minor: string;
-  held_minor: string;
 }
 
 interface OrderItemRow {
@@ -113,13 +100,11 @@ interface OrderItemRow {
 }
 
 const allowedTransitions: Record<CanteenOrderStatus, CanteenOrderStatus[]> = {
-  PLACED: ['ACCEPTED', 'CANCELLED', 'REJECTED'],
-  ACCEPTED: ['PREPARING', 'CANCELLED_BY_CANTEEN'],
+  PLACED: ['PREPARING', 'CANCELLED', 'CANCELLED_BY_CANTEEN'],
   PREPARING: ['READY', 'CANCELLED_BY_CANTEEN'],
   READY: ['DELIVERED'],
   DELIVERED: [],
   CANCELLED: [],
-  REJECTED: [],
   CANCELLED_BY_CANTEEN: [],
 };
 const maxMinor = 9_223_372_036_854_775_807n;
@@ -129,7 +114,6 @@ function orderView(row: OrderRow): CanteenOrderView {
     id: row.id,
     status: row.status,
     totalMinor: row.total_minor,
-    deliveryCode: row.delivery_code,
     customerName: row.customer_name,
     customerPhone: row.customer_phone,
     items: row.items,
@@ -230,15 +214,13 @@ export class CanteenOrderRepository {
           canteen_id,
           customer_user_profile_id,
           total_minor,
-          delivery_code,
           idempotency_key
-        ) VALUES ($1, $2, $3, $4, $5)
+        ) VALUES ($1, $2, $3, $4)
         RETURNING id`,
         [
           store.id,
           customer.profile_id,
           totalMinor.toString(),
-          randomInt(0, 1_000_000).toString().padStart(6, '0'),
           input.idempotencyKey,
         ],
       );
@@ -269,7 +251,7 @@ export class CanteenOrderRepository {
 
         await client.query(
           `UPDATE canteen.product
-          SET stock_reserved = stock_reserved + $2,
+          SET stock_on_hand = stock_on_hand - $2,
               updated_at = now()
           WHERE id = $1`,
           [product.id, quantity.toString()],
@@ -298,9 +280,28 @@ export class CanteenOrderRepository {
       );
 
       await client.query(
+        `INSERT INTO wallet.ledger_entry (
+          account_id,
+          entry_type,
+          available_delta_minor,
+          held_delta_minor,
+          idempotency_key,
+          actor_user_profile_id,
+          service_code,
+          reference_id
+        ) VALUES ($1, 'CAPTURE', 0, $2, $3, $4, 'canteen-main', $5)`,
+        [
+          customer.account_id,
+          (-totalMinor).toString(),
+          `canteen-order-capture:${orderId}`,
+          customer.profile_id,
+          orderId,
+        ],
+      );
+
+      await client.query(
         `UPDATE wallet.account
         SET available_minor = available_minor - $2,
-            held_minor = held_minor + $2,
             updated_at = now()
         WHERE id = $1`,
         [customer.account_id, totalMinor.toString()],
@@ -363,7 +364,7 @@ export class CanteenOrderRepository {
       }
 
       const items = await this.lockOrderProducts(client, order.id);
-      await this.releaseReservation(client, order, items, customer.id);
+      await this.refundCapturedOrder(client, order, items, customer.id);
       await this.changeStatus(client, order, 'CANCELLED', customer.id);
 
       return this.getOrder(client, order.id);
@@ -374,7 +375,6 @@ export class CanteenOrderRepository {
     actorSubject: string;
     orderId: string;
     status: ManagementOrderStatus;
-    deliveryCode: string | null;
   }): Promise<CanteenOrderView> {
     return this.postgres.withTransaction(async (client) => {
       const actor = await this.findActor(client, input.actorSubject);
@@ -390,17 +390,8 @@ export class CanteenOrderRepository {
 
       const items = await this.lockOrderProducts(client, order.id);
 
-      if (input.status === 'ACCEPTED') {
-        await this.captureOrder(client, order, items, actor.id);
-      } else if (input.status === 'REJECTED') {
-        await this.releaseReservation(client, order, items, actor.id);
-      } else if (input.status === 'CANCELLED_BY_CANTEEN') {
-        await this.refundCapturedOrder(client, order, actor.id);
-      } else if (
-        input.status === 'DELIVERED' &&
-        input.deliveryCode !== order.delivery_code
-      ) {
-        throw new CanteenRuleError('DELIVERY_CODE_INVALID');
+      if (input.status === 'CANCELLED_BY_CANTEEN') {
+        await this.refundCapturedOrder(client, order, items, actor.id);
       }
 
       await this.changeStatus(client, order, input.status, actor.id);
@@ -434,117 +425,23 @@ export class CanteenOrderRepository {
     });
   }
 
-  private async captureOrder(
-    client: PoolClient,
-    order: LockedOrderRow,
-    items: OrderItemRow[],
-    actorId: string,
-  ) {
-    const total = BigInt(order.total_minor);
-
-    if (BigInt(order.held_minor) < total) {
-      throw new CanteenRuleError('ORDER_STATE_CONFLICT');
-    }
-
-    for (const item of items) {
-      await client.query(
-        `UPDATE canteen.product
-        SET stock_on_hand = stock_on_hand - $2,
-            stock_reserved = stock_reserved - $2,
-            updated_at = now()
-        WHERE id = $1`,
-        [item.product_id, item.quantity],
-      );
-    }
-
-    await client.query(
-      `INSERT INTO wallet.ledger_entry (
-        account_id,
-        entry_type,
-        available_delta_minor,
-        held_delta_minor,
-        idempotency_key,
-        actor_user_profile_id,
-        service_code,
-        reference_id
-      ) VALUES ($1, 'CAPTURE', 0, $2, $3, $4, 'canteen-main', $5)`,
-      [
-        order.account_id,
-        (-total).toString(),
-        `canteen-order-capture:${order.id}`,
-        actorId,
-        order.id,
-      ],
-    );
-
-    await client.query(
-      `UPDATE wallet.account
-      SET held_minor = held_minor - $2,
-          updated_at = now()
-      WHERE id = $1`,
-      [order.account_id, total.toString()],
-    );
-  }
-
-  private async releaseReservation(
-    client: PoolClient,
-    order: LockedOrderRow,
-    items: OrderItemRow[],
-    actorId: string,
-  ) {
-    const total = BigInt(order.total_minor);
-
-    if (BigInt(order.held_minor) < total) {
-      throw new CanteenRuleError('ORDER_STATE_CONFLICT');
-    }
-
-    for (const item of items) {
-      await client.query(
-        `UPDATE canteen.product
-        SET stock_reserved = stock_reserved - $2,
-            updated_at = now()
-        WHERE id = $1`,
-        [item.product_id, item.quantity],
-      );
-    }
-
-    await client.query(
-      `INSERT INTO wallet.ledger_entry (
-        account_id,
-        entry_type,
-        available_delta_minor,
-        held_delta_minor,
-        idempotency_key,
-        actor_user_profile_id,
-        service_code,
-        reference_id
-      ) VALUES ($1, 'RELEASE', $2, $3, $4, $5, 'canteen-main', $6)`,
-      [
-        order.account_id,
-        total.toString(),
-        (-total).toString(),
-        `canteen-order-release:${order.id}`,
-        actorId,
-        order.id,
-      ],
-    );
-
-    await client.query(
-      `UPDATE wallet.account
-      SET available_minor = available_minor + $2,
-          held_minor = held_minor - $2,
-          updated_at = now()
-      WHERE id = $1`,
-      [order.account_id, total.toString()],
-    );
-  }
-
   private async refundCapturedOrder(
     client: PoolClient,
     order: LockedOrderRow,
+    items: OrderItemRow[],
     actorId: string,
   ) {
     const total = BigInt(order.total_minor);
+
+    for (const item of items) {
+      await client.query(
+        `UPDATE canteen.product
+        SET stock_on_hand = stock_on_hand + $2,
+            updated_at = now()
+        WHERE id = $1`,
+        [item.product_id, item.quantity],
+      );
+    }
 
     await client.query(
       `INSERT INTO wallet.ledger_entry (
@@ -614,8 +511,7 @@ export class CanteenOrderRepository {
       `SELECT
         profile.id AS profile_id,
         account.id AS account_id,
-        account.available_minor::text,
-        account.held_minor::text
+        account.available_minor::text
       FROM core.user_profile AS profile
       JOIN wallet.account AS account ON account.user_profile_id = profile.id
       WHERE profile.keycloak_subject = $1
@@ -698,8 +594,7 @@ export class CanteenOrderRepository {
         orders.canteen_id,
         orders.customer_user_profile_id,
         orders.status,
-        orders.total_minor::text,
-        orders.delivery_code
+        orders.total_minor::text
       FROM canteen.customer_order AS orders
       WHERE orders.id = $1
       FOR UPDATE OF orders`,
@@ -714,9 +609,7 @@ export class CanteenOrderRepository {
 
     const accountResult = await client.query<LockedAccountRow>(
       `SELECT
-        id AS account_id,
-        available_minor::text,
-        held_minor::text
+        id AS account_id
       FROM wallet.account
       WHERE user_profile_id = $1
       FOR UPDATE`,
@@ -757,10 +650,9 @@ export class CanteenOrderRepository {
       ORDER BY
         CASE orders.status
           WHEN 'PLACED' THEN 0
-          WHEN 'ACCEPTED' THEN 1
-          WHEN 'PREPARING' THEN 2
-          WHEN 'READY' THEN 3
-          ELSE 4
+          WHEN 'PREPARING' THEN 1
+          WHEN 'READY' THEN 2
+          ELSE 3
         END,
         orders.created_at DESC
       LIMIT 100`,
@@ -792,7 +684,6 @@ export class CanteenOrderRepository {
       orders.customer_user_profile_id,
       orders.status,
       orders.total_minor::text,
-      orders.delivery_code,
       concat_ws(' ', profile.first_name, profile.last_name) AS customer_name,
       profile.phone_e164 AS customer_phone,
       json_agg(

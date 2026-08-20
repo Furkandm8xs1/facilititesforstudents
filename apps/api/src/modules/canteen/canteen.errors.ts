@@ -15,7 +15,6 @@ export type CanteenRuleErrorCode =
   | 'ORDER_TOTAL_TOO_LARGE'
   | 'ORDER_NOT_FOUND'
   | 'ORDER_STATE_CONFLICT'
-  | 'DELIVERY_CODE_INVALID'
   | 'IDEMPOTENCY_CONFLICT';
 
 export class CanteenRuleError extends Error {

@@ -10,12 +10,10 @@ import { manageProductAction, type ProductActionState } from './actions';
 const initialState: ProductActionState = { status: 'idle', message: '' };
 const statusLabels: Record<CanteenOrderStatus, string> = {
   PLACED: 'Yeni sipariş',
-  ACCEPTED: 'Kabul edildi',
   PREPARING: 'Hazırlanıyor',
   READY: 'Teslime hazır',
   DELIVERED: 'Teslim edildi',
   CANCELLED: 'Kullanıcı iptal etti',
-  REJECTED: 'Reddedildi',
   CANCELLED_BY_CANTEEN: 'Kantin iptal etti',
 };
 
@@ -59,42 +57,8 @@ export function OrderQueue({ order }: { order: CanteenOrder }) {
         ))}
       </ul>
 
-      {order.status === 'READY' ? (
-        <label className="delivery-code-input">
-          <span>6 haneli teslim kodu</span>
-          <input
-            name="deliveryCode"
-            inputMode="numeric"
-            pattern="[0-9]{6}"
-            maxLength={6}
-            required
-          />
-          <small>{state.errors?.deliveryCode}</small>
-        </label>
-      ) : null}
-
       <div className="product-actions">
         {order.status === 'PLACED' ? (
-          <>
-            <button
-              className="primary-action"
-              name="targetStatus"
-              value="ACCEPTED"
-              disabled={pending}
-            >
-              Kabul et
-            </button>
-            <button
-              className="danger-action"
-              name="targetStatus"
-              value="REJECTED"
-              disabled={pending}
-            >
-              Reddet
-            </button>
-          </>
-        ) : null}
-        {order.status === 'ACCEPTED' ? (
           <>
             <button
               className="primary-action"
@@ -141,7 +105,7 @@ export function OrderQueue({ order }: { order: CanteenOrder }) {
             value="DELIVERED"
             disabled={pending}
           >
-            Kodu doğrula ve teslim et
+            Teslim edildi olarak işaretle
           </button>
         ) : null}
       </div>

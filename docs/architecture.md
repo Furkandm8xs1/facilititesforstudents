@@ -163,10 +163,10 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 ### Sipariş ödeme akışı
 
 1. Kullanıcı sipariş verdiğinde yeterli kullanılabilir bakiye kontrol edilir.
-2. Sipariş tutarı cüzdanda bloke edilir.
-3. Kantin siparişi kabul ettiğinde bloke kesin harcamaya dönüştürülür.
-4. Sipariş kabul edilmeden kullanıcı iptal ederse bloke kaldırılır.
-5. Kantin siparişi reddeder veya kabul sonrasında karşılayamazsa tutar kullanıcıya iade edilir.
+2. Sipariş tutarı kullanıcının bakiyesinden anında düşülür.
+3. Sipariş `PLACED` durumunda oluşturulur; ayrıca görevli kabulü gerekmez.
+4. Kullanıcı hazırlama başlamadan iptal ederse tutar bakiyesine iade edilir.
+5. Kantin siparişi hazırlama öncesinde veya sırasında iptal ederse tutar otomatik iade edilir.
 
 ## 8. Kantin ürün ve stok kuralları
 
@@ -179,9 +179,8 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 - `canteen_operator` ürün stoklarını günceller ve ürünü satışa açıp kapatır.
 - Yeni ürünün stoğu sıfırdan büyükse ürün otomatik olarak satışa açılır.
 - Sepete ürün eklemek stok azaltmaz.
-- Sipariş oluşturulduğunda ürün miktarı rezerve edilir.
-- Sipariş kabul edildiğinde stok düşümü kesinleşir.
-- Sipariş iptal veya reddedilirse rezerve edilen stok geri bırakılır.
+- Sipariş oluşturulduğunda ürün miktarı stoktan anında düşülür.
+- Kullanıcı veya kantin siparişi iptal ederse ürün miktarı stoğa iade edilir.
 - Stok sıfır olduğunda ürün otomatik olarak kullanıcı listesinden gizlenir.
 - Ürüne yeniden stok girildiğinde tekrar satışa açılabilir.
 - Sipariş geçmişinde kullanılmış ürün fiziksel olarak silinmez; pasif/arşiv durumuna alınır.
@@ -198,18 +197,15 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 
 ```mermaid
 stateDiagram-v2
-    [*] --> PLACED: Sipariş verildi\nBakiye ve stok bloke
-    PLACED --> CANCELLED: Kullanıcı iptal etti\nBlokeler kaldırılır
-    PLACED --> REJECTED: Kantin reddetti\nBlokeler kaldırılır
-    PLACED --> ACCEPTED: Kantin kabul etti\nÖdeme ve stok kesinleşir
-    ACCEPTED --> PREPARING: Hazırlanıyor
+    [*] --> PLACED: Sipariş verildi\nÖdeme ve stok kesinleşti
+    PLACED --> CANCELLED: Kullanıcı iptal etti\nPara ve stok iade edildi
+    PLACED --> PREPARING: Hazırlanıyor
     PREPARING --> READY: Hazır
-    READY --> DELIVERED: Teslim kodu doğrulandı
-    ACCEPTED --> CANCELLED_BY_CANTEEN: Kantin karşılayamadı\nPara iade edilir
-    PREPARING --> CANCELLED_BY_CANTEEN: Kantin karşılayamadı\nPara iade edilir
+    READY --> DELIVERED: Teslim edildi
+    PLACED --> CANCELLED_BY_CANTEEN: Kantin iptal etti\nPara ve stok iade edildi
+    PREPARING --> CANCELLED_BY_CANTEEN: Kantin iptal etti\nPara ve stok iade edildi
     DELIVERED --> [*]
     CANCELLED --> [*]
-    REJECTED --> [*]
     CANCELLED_BY_CANTEEN --> [*]
 ```
 
@@ -217,12 +213,12 @@ stateDiagram-v2
 
 - Kantin görevli tarafından manuel olarak siparişe açılır veya kapatılır.
 - Kantin kapalıyken kullanıcı ürünleri görebilir fakat sipariş veremez.
+- Sipariş ayrıca görevli kabulü beklemeden doğrudan alınır.
 - Kullanıcı siparişi yalnızca `PLACED` durumundayken iptal edebilir.
-- Sipariş kabul edildikten sonra kullanıcı tarafından iptal edilemez.
-- Kabul sonrasında iptal gerektiğinde işlemi kantin görevlisi yapar ve para otomatik iade edilir.
+- Hazırlama başladıktan sonra kullanıcı tarafından iptal edilemez.
+- Hazırlama öncesinde veya sırasında iptal gerektiğinde kantin görevlisi işlemi yapar; para ve stok otomatik iade edilir.
 - İlk sürümde yalnızca kantinden teslim alma vardır; odaya teslimat yoktur.
-- Hazır sipariş için kullanıcıya kısa bir teslim kodu gösterilir.
-- Görevli teslim kodunu doğruladıktan sonra siparişi teslim edildi olarak işaretler.
+- Görevli hazır siparişi kod doğrulaması olmadan teslim edildi olarak işaretler.
 - Sipariş durumu ilk sürümde yalnızca uygulama içinde gösterilir.
 
 ## 10. İlk sürüm ekranları
@@ -233,7 +229,7 @@ stateDiagram-v2
 - Servislerin bulunduğu portal ana sayfası
 - Kantin ürün listesi
 - Sepet ve sipariş onayı
-- Aktif sipariş ve teslim kodu
+- Aktif sipariş durumu
 - Geçmiş siparişler
 - Bakiye, bloke ve cüzdan hareketleri
 
@@ -302,7 +298,7 @@ Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır.
 3. **Kimlik ve profil** — Keycloak girişi, access token doğrulama, uygulama kullanıcı profili, hesap durumları ve rol kontrolü.
 4. **Wallet/Ledger** — Cüzdan hesabı, nakit yükleme, bloke, kesinleştirme, serbest bırakma, ters işlem ve hareket geçmişi.
 5. **Kantin kataloğu** — Kantin, ürün, fiyat, stok, rezervasyon ve satışa açık/kapalı durumu.
-6. **Sipariş akışı** — Sepet, sipariş durumları, Wallet ve stok entegrasyonu, teslim kodu.
+6. **Sipariş akışı** — Sepet, sipariş durumları ile Wallet ve stok entegrasyonu.
 7. **Kullanıcı arayüzleri** — Portal, ürünler, sepet, sipariş takibi ve cüzdan ekranları.
 8. **Görevli/yönetici arayüzleri** — Sipariş kuyruğu, katalog/stok, kullanıcı/rol ve nakit yönetimi.
 9. **Güvenilirlik** — Yetki testleri, eş zamanlı sipariş testleri, idempotency, audit ve hata senaryoları.
@@ -316,8 +312,7 @@ Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır.
 - Cashier nakit yükler ve işlem anında kullanıcının ortak bakiyesinde görünür.
 - Kullanıcı yeterli bakiyesi ve stoğu bulunan ürünlerle sipariş oluşturabilir.
 - Eş zamanlı siparişler bakiyeyi veya stoğu negatife düşüremez.
-- Kantin görevlisi siparişi kabul edip hazırlayabilir ve hazır durumuna getirebilir.
-- Kullanıcı teslim koduyla siparişini teslim alabilir.
-- İptal ve ret durumlarında bakiye ve stok doğru şekilde geri bırakılır.
+- Kantin görevlisi siparişi hazırlayabilir, hazır ve teslim edildi durumuna getirebilir.
+- İptal durumlarında bakiye ve stok doğru şekilde iade edilir.
 - Fiyat değişiklikleri geçmiş siparişlerin tutarını değiştirmez.
 - Para, fiyat, stok ve sipariş durumu değişiklikleri denetlenebilir şekilde kaydedilir.

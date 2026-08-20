@@ -106,7 +106,6 @@ export async function manageProductAction(
           formText(formData, 'orderId'),
           {
             status: formText(formData, 'targetStatus') as CanteenOrderStatus,
-            deliveryCode: formText(formData, 'deliveryCode'),
           },
         );
         break;

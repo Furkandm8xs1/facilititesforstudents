@@ -46,8 +46,8 @@ export default async function CanteenPage() {
           <p className="eyebrow">Yurt kantini</p>
           <h1>{catalog?.canteen.name ?? 'Ana Kantin'}</h1>
           <p className="intro">
-            Satıştaki ürünü ve adedi seç. Sipariş verdiğinde tutar bakiyende,
-            ürünler ise stokta kantin onayına kadar bloke edilir.
+            Satıştaki ürünü ve adedi seç. Sipariş verdiğinde tutar bakiyenden,
+            ürünler ise stoktan doğrudan düşer.
           </p>
         </div>
         <div className="canteen-state-card">

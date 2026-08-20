@@ -9,13 +9,11 @@ import { cancelOrderAction, type OrderActionState } from './actions';
 
 const initialState: OrderActionState = { status: 'idle', message: '' };
 const statusLabels: Record<CanteenOrderStatus, string> = {
-  PLACED: 'Kantin onayı bekliyor',
-  ACCEPTED: 'Kabul edildi',
+  PLACED: 'Sipariş alındı',
   PREPARING: 'Hazırlanıyor',
   READY: 'Teslime hazır',
   DELIVERED: 'Teslim edildi',
   CANCELLED: 'İptal edildi',
-  REJECTED: 'Kantin reddetti',
   CANCELLED_BY_CANTEEN: 'Kantin iptal etti',
 };
 
@@ -52,13 +50,6 @@ export function OrderHistory({ order }: { order: CanteenOrder }) {
           </li>
         ))}
       </ul>
-
-      {order.status === 'READY' ? (
-        <div className="delivery-code">
-          <span>Teslim kodun</span>
-          <strong>{order.deliveryCode}</strong>
-        </div>
-      ) : null}
 
       {order.status === 'PLACED' ? (
         <form action={formAction}>
