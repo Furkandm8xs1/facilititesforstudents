@@ -7,7 +7,7 @@ import {
 import { Reflector } from '@nestjs/core';
 
 import type { AuthenticatedRequest } from './authenticated-request';
-import { REQUIRED_ROLES_KEY } from './roles.decorator';
+import { ANY_REQUIRED_ROLES_KEY, REQUIRED_ROLES_KEY } from './roles.decorator';
 
 @Injectable()
 export class RolesGuard implements CanActivate {
@@ -18,15 +18,26 @@ export class RolesGuard implements CanActivate {
       REQUIRED_ROLES_KEY,
       [context.getHandler(), context.getClass()],
     );
+    const anyRequiredRoles = this.reflector.getAllAndOverride<string[]>(
+      ANY_REQUIRED_ROLES_KEY,
+      [context.getHandler(), context.getClass()],
+    );
 
-    if (!requiredRoles?.length) {
+    if (!requiredRoles?.length && !anyRequiredRoles?.length) {
       return true;
     }
 
     const { user } = context.switchToHttp().getRequest<AuthenticatedRequest>();
     const assignedRoles = new Set([...user.realmRoles, ...user.clientRoles]);
 
-    if (!requiredRoles.every((role) => assignedRoles.has(role))) {
+    const hasEveryRequiredRole =
+      !requiredRoles?.length ||
+      requiredRoles.every((role) => assignedRoles.has(role));
+    const hasAnyRequiredRole =
+      !anyRequiredRoles?.length ||
+      anyRequiredRoles.some((role) => assignedRoles.has(role));
+
+    if (!hasEveryRequiredRole || !hasAnyRequiredRole) {
       throw new ForbiddenException('Bu işlem için gerekli rol bulunmuyor.');
     }
 

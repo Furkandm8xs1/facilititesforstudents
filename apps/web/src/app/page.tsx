@@ -9,20 +9,23 @@ const services = [
   {
     title: 'Kantin',
     description: 'Ürünleri incele, sipariş ver ve teslim durumunu takip et.',
-    status: 'Kullanıma hazırlanıyor',
+    status: 'Ürünleri görüntüle',
     active: true,
+    href: '/canteen',
   },
   {
     title: 'Laundry',
     description: 'Çamaşırhane hizmetleri bu portal üzerinden yönetilecek.',
     status: 'Sonraki aşama',
     active: false,
+    href: null,
   },
   {
     title: 'Kitchen',
     description: 'Mutfak hizmetleri ortak giriş ve bakiyeyi kullanacak.',
     status: 'Sonraki aşama',
     active: false,
+    href: null,
   },
 ] as const;
 
@@ -64,6 +67,13 @@ export default async function Home() {
           {session.user.roles.includes('wallet_cashier') ? (
             <Link className="text-action" href="/wallet/cashier">
               Nakit yönetimi
+            </Link>
+          ) : null}
+          {session.user.roles.some(
+            (role) => role === 'canteen_manager' || role === 'canteen_operator',
+          ) ? (
+            <Link className="text-action" href="/canteen/manage">
+              Kantin yönetimi
             </Link>
           ) : null}
           <form
@@ -116,19 +126,33 @@ export default async function Home() {
         </div>
 
         <div className="service-grid">
-          {services.map((service, index) => (
-            <article
-              className={`service-card ${service.active ? 'service-card-active' : ''}`}
-              key={service.title}
-            >
-              <span className="service-number">0{index + 1}</span>
-              <div>
-                <h3>{service.title}</h3>
-                <p>{service.description}</p>
-              </div>
-              <span className="service-status">{service.status}</span>
-            </article>
-          ))}
+          {services.map((service, index) => {
+            const content = (
+              <>
+                <span className="service-number">0{index + 1}</span>
+                <div>
+                  <h3>{service.title}</h3>
+                  <p>{service.description}</p>
+                </div>
+                <span className="service-status">{service.status}</span>
+              </>
+            );
+            const className = `service-card ${service.active ? 'service-card-active' : ''}`;
+
+            return service.href ? (
+              <Link
+                className={className}
+                href={service.href}
+                key={service.title}
+              >
+                {content}
+              </Link>
+            ) : (
+              <article className={className} key={service.title}>
+                {content}
+              </article>
+            );
+          })}
         </div>
       </section>
     </main>

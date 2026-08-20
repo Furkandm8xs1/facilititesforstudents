@@ -73,6 +73,36 @@ export interface WalletMutationResult {
   errors?: Record<string, string>;
 }
 
+export interface CanteenProduct {
+  id: string;
+  name: string;
+  priceMinor: string;
+  stockOnHand: string;
+  stockReserved: string;
+  availableStock: string;
+  listed: boolean;
+  customerVisible: boolean;
+  archived: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CanteenCatalog {
+  canteen: {
+    id: string;
+    code: string;
+    name: string;
+    orderingEnabled: boolean;
+  };
+  products: CanteenProduct[];
+}
+
+export interface CanteenMutationResult {
+  ok: boolean;
+  message: string;
+  errors?: Record<string, string>;
+}
+
 export async function getCurrentUser(
   accessToken: string,
 ): Promise<CurrentUserResponse | null> {
@@ -235,6 +265,135 @@ async function walletMutation(
         typeof body.message === 'string'
           ? body.message
           : 'Cüzdan işlemi tamamlanamadı.',
+      errors: body.errors,
+    };
+  }
+
+  return { ok: true, message: successMessage };
+}
+
+export async function getCanteenCatalog(
+  accessToken: string,
+): Promise<CanteenCatalog | null> {
+  return fetchCanteenCatalog(accessToken, '/canteen/catalog');
+}
+
+export async function getCanteenManagement(
+  accessToken: string,
+): Promise<CanteenCatalog | null> {
+  return fetchCanteenCatalog(accessToken, '/canteen/manage');
+}
+
+export function createOrUpdateCanteenProduct(
+  accessToken: string,
+  payload: { name: string; priceTl: string; stock: string },
+) {
+  return canteenMutation(
+    accessToken,
+    'POST',
+    '/canteen/manage/products',
+    payload,
+    'Ürün Ana Kantin kataloğuna kaydedildi.',
+  );
+}
+
+export function updateCanteenProductDetails(
+  accessToken: string,
+  productId: string,
+  payload: { name: string; priceTl: string },
+) {
+  return canteenMutation(
+    accessToken,
+    'PATCH',
+    `/canteen/manage/products/${encodeURIComponent(productId)}/details`,
+    payload,
+    'Ürün adı ve fiyatı güncellendi.',
+  );
+}
+
+export function updateCanteenProductStock(
+  accessToken: string,
+  productId: string,
+  stock: string,
+) {
+  return canteenMutation(
+    accessToken,
+    'PATCH',
+    `/canteen/manage/products/${encodeURIComponent(productId)}/stock`,
+    { stock },
+    'Ürün stoğu güncellendi.',
+  );
+}
+
+export function updateCanteenProductVisibility(
+  accessToken: string,
+  productId: string,
+  listed: boolean,
+) {
+  return canteenMutation(
+    accessToken,
+    'PATCH',
+    `/canteen/manage/products/${encodeURIComponent(productId)}/visibility`,
+    { listed },
+    listed ? 'Ürün satışa açıldı.' : 'Ürün satışa kapatıldı.',
+  );
+}
+
+export function archiveCanteenProduct(accessToken: string, productId: string) {
+  return canteenMutation(
+    accessToken,
+    'POST',
+    `/canteen/manage/products/${encodeURIComponent(productId)}/archive`,
+    {},
+    'Ürün arşivlendi.',
+  );
+}
+
+async function fetchCanteenCatalog(
+  accessToken: string,
+  path: string,
+): Promise<CanteenCatalog | null> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    console.error(`GET ${path} başarısız: HTTP ${response.status}`);
+    return null;
+  }
+
+  return (await response.json()) as CanteenCatalog;
+}
+
+async function canteenMutation(
+  accessToken: string,
+  method: 'POST' | 'PATCH',
+  path: string,
+  payload: object,
+  successMessage: string,
+): Promise<CanteenMutationResult> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string | string[];
+    errors?: Record<string, string>;
+  };
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message:
+        typeof body.message === 'string'
+          ? body.message
+          : 'Kantin işlemi tamamlanamadı.',
       errors: body.errors,
     };
   }

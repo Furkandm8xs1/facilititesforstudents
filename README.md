@@ -66,3 +66,10 @@ hareketlerini görebilir. `wallet_cashier` rolündeki görevliler **Nakit yönet
 ekranında telefon numarasıyla kullanıcı bulup tam TL bakiye yükleyebilir. Kasiyer
 kendi hesabına yükleme yapamaz; hatalı nakit yükleme gerekçeyle, tam tutarıyla ve
 yalnızca bir kez ters çevrilebilir.
+
+Portalın **Kantin** kartı yalnızca Ana Kantin’in satışta ve stokta bulunan
+ürünlerini gösterir. `canteen_manager` rolü ürün adı, tam TL fiyatı ve tam adet
+stokla ürün oluşturabilir; aynı adlı ürün yeniden girildiğinde kopya açılmaz,
+mevcut kayıt güncellenir. `canteen_operator` ve `canteen_manager` stok ile satış
+durumunu yönetebilir ve ürünü arşivleyebilir. Fiyat ve stok değişiklikleri
+değiştirilemez ürün olaylarıyla denetlenir.

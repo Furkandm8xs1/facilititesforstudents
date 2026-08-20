@@ -125,6 +125,8 @@ Keycloak'ın teknik yönetici rolleri işletme rollerinden ayrı tutulacaktır. 
 
 İlk arayüz tek kantin gösterecektir. Bununla birlikte ürün, sipariş ve görevli atamaları bir `canteen_id` ile ilişkilendirilecek; veri modeli ileride birden fazla kantini destekleyecektir.
 
+İlk kullanıcı kataloğunda yalnızca `canteen-main` kodlu **Ana Kantin** görünür. `Test Kantini` geliştirme verisi olarak sistemde kalabilir ancak kullanıcı kataloğuna çıkarılmaz.
+
 ## 7. Merkezi cüzdan ve para kuralları
 
 Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanacağı merkezi bir modüldür.
@@ -170,8 +172,12 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 
 - Günlük/özel menü için ayrı kategori veya zamanlama sistemi bulunmaz.
 - Bütün ürünler aynı ürün modelini kullanır.
+- İlk sürümde ürün fotoğrafı bulunmaz.
 - `canteen_manager` ürün adı, fiyat ve ilk stok miktarıyla ürün oluşturur.
+- Ürün fiyatı yalnızca tam TL, stok ise yalnızca tam adet olarak girilir; ikisi de veritabanında tamsayı olarak saklanır.
+- Aynı kantinde aynı adla ikinci ürün oluşturulmaz. Mevcut veya arşivlenmiş ürünün fiyatı, stoğu ve satış durumu güncellenir.
 - `canteen_operator` ürün stoklarını günceller ve ürünü satışa açıp kapatır.
+- Yeni ürünün stoğu sıfırdan büyükse ürün otomatik olarak satışa açılır.
 - Sepete ürün eklemek stok azaltmaz.
 - Sipariş oluşturulduğunda ürün miktarı rezerve edilir.
 - Sipariş kabul edildiğinde stok düşümü kesinleşir.

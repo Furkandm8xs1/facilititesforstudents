@@ -22,16 +22,41 @@ function contextWithRoles(roles: string[]): ExecutionContext {
 }
 
 describe('RolesGuard', () => {
-  const reflector = {
-    getAllAndOverride: vi.fn().mockReturnValue(['platform_admin']),
-  } as unknown as Reflector;
-  const guard = new RolesGuard(reflector);
+  function guardWith(
+    required: string[] | undefined,
+    any: string[] | undefined,
+  ) {
+    const reflector = {
+      getAllAndOverride: vi
+        .fn()
+        .mockReturnValueOnce(required)
+        .mockReturnValueOnce(any),
+    } as unknown as Reflector;
+
+    return new RolesGuard(reflector);
+  }
 
   it('accepts a user with every required role', () => {
+    const guard = guardWith(['platform_admin'], undefined);
     expect(guard.canActivate(contextWithRoles(['platform_admin']))).toBe(true);
   });
 
   it('rejects a user without the required role', () => {
+    const guard = guardWith(['platform_admin'], undefined);
+    expect(() => guard.canActivate(contextWithRoles(['portal_user']))).toThrow(
+      ForbiddenException,
+    );
+  });
+
+  it('accepts a user with any one of the alternative roles', () => {
+    const guard = guardWith(undefined, ['canteen_manager', 'canteen_operator']);
+
+    expect(guard.canActivate(contextWithRoles(['canteen_manager']))).toBe(true);
+  });
+
+  it('rejects a user without any alternative role', () => {
+    const guard = guardWith(undefined, ['canteen_manager', 'canteen_operator']);
+
     expect(() => guard.canActivate(contextWithRoles(['portal_user']))).toThrow(
       ForbiddenException,
     );
