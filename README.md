@@ -3,6 +3,8 @@
 Yurt içi ağda çalışan merkezi giriş, ortak cüzdan ve kantin uygulaması.
 
 Ürün kapsamı ve mimari kararlar için [mimari belgesine](docs/architecture.md) bakın.
+Kodun İngilizce teknik rehberleri için [uygulama dokümantasyonu dizininden](apps/README.md)
+başlayın.
 
 ## Teknolojiler
 
