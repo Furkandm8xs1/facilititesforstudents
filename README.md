@@ -59,3 +59,10 @@ telefon numarası, geçici parola ve servis rolleriyle hesap oluşturabilir. Yen
 hesap ilk girişinde parolasını değiştirmek zorundadır. API, Keycloak işlemi ile
 PostgreSQL profil kaydından biri başarısız olursa yeni hesabı telafi ederek yarım
 kayıt bırakmaz.
+
+Her kullanıcı için otomatik olarak ortak bir TRY cüzdanı açılır. Kullanıcılar
+portalın **Ortak bakiye** kartından kullanılabilir bakiyelerini, blokelerini ve
+hareketlerini görebilir. `wallet_cashier` rolündeki görevliler **Nakit yönetimi**
+ekranında telefon numarasıyla kullanıcı bulup tam TL bakiye yükleyebilir. Kasiyer
+kendi hesabına yükleme yapamaz; hatalı nakit yükleme gerekçeyle, tam tutarıyla ve
+yalnızca bir kez ters çevrilebilir.

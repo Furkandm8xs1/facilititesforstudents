@@ -2,7 +2,8 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { auth, signOut } from '@/auth';
-import { getCurrentUser } from '@/lib/api';
+import { getCurrentUser, getWalletOverview } from '@/lib/api';
+import { formatTryMinor } from '@/lib/money';
 
 const services = [
   {
@@ -32,9 +33,12 @@ export default async function Home() {
     redirect('/login');
   }
 
-  const currentUser = session.apiAccessToken
-    ? await getCurrentUser(session.apiAccessToken)
-    : null;
+  const [currentUser, wallet] = session.apiAccessToken
+    ? await Promise.all([
+        getCurrentUser(session.apiAccessToken),
+        getWalletOverview(session.apiAccessToken),
+      ])
+    : [null, null];
   const displayName = currentUser?.profile
     ? `${currentUser.profile.first_name} ${currentUser.profile.last_name}`
     : (session.user.name ?? 'Yurt kullanıcısı');
@@ -55,6 +59,11 @@ export default async function Home() {
           {session.user.roles.includes('platform_admin') ? (
             <Link className="text-action" href="/admin/users/new">
               Kullanıcı ekle
+            </Link>
+          ) : null}
+          {session.user.roles.includes('wallet_cashier') ? (
+            <Link className="text-action" href="/wallet/cashier">
+              Nakit yönetimi
             </Link>
           ) : null}
           <form
@@ -84,14 +93,17 @@ export default async function Home() {
             Ortak hesabın ve bakiyenle yurt hizmetlerine güvenli biçimde eriş.
           </p>
         </div>
-        <div
-          className="balance-card"
-          aria-label="Bakiye alanı yakında etkinleşecek"
-        >
+        <Link className="balance-card" href="/wallet">
           <span>Ortak bakiye</span>
-          <strong>—</strong>
-          <small>Cüzdan aşamasında etkinleşecek</small>
-        </div>
+          <strong>
+            {wallet ? formatTryMinor(wallet.account.availableMinor) : '—'}
+          </strong>
+          <small>
+            {wallet
+              ? `Bloke: ${formatTryMinor(wallet.account.heldMinor)} · Hareketleri gör`
+              : 'Cüzdan bilgisine ulaşılamadı'}
+          </small>
+        </Link>
       </header>
 
       <section aria-labelledby="services-title">

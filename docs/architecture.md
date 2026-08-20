@@ -132,9 +132,12 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 ### Temel kurallar
 
 - Her kullanıcının hizmetlerden bağımsız tek bakiyesi bulunur.
+- Yeni kullanıcıya sıfır bakiyeli TRY cüzdanı otomatik açılır; mevcut kullanıcılar geçiş sırasında tamamlanır.
 - Kullanıcı bakiyesi negatif olamaz.
 - Para karttan veya çevrim içi ödeme sistemiyle yüklenmez.
 - Kullanıcı nakit parayı `wallet_cashier` yetkili görevliye verir; görevli bakiyeyi sisteme yükler.
+- Kasiyer yükleme tutarını yalnızca tam TL olarak girer; kuruşlu nakit yükleme yapılmaz.
+- Kasiyer kendi cüzdanına bakiye yükleyemez.
 - Kullanıcı bakiyesini nakit olarak geri çekemez.
 - Kullanıcı yurttan ayrılsa bile para cüzdanda kalır.
 - Kullanıcı kullanılabilir bakiyesini, bloke tutarını ve işlem geçmişini görebilir.
@@ -144,7 +147,11 @@ Wallet kantine ait değildir; bütün mevcut ve gelecekteki hizmetlerin kullanac
 
 - Bakiye yalnızca değiştirilebilir tek bir sayı olarak tutulmaz; bütün hareketler değişmez bir ledger içinde kaydedilir.
 - Para hareketleri silinmez ve mevcut kayıtlar düzenlenmez.
-- Hatalı işlem `wallet_cashier` tarafından gerekçe girilerek ters kayıtla düzeltilir.
+- `wallet_cashier` yalnızca hatalı nakit yüklemeyi gerekçe girerek ters kayıtla düzeltebilir.
+- Nakit yükleme yalnızca tam tutarıyla, bir kez ters çevrilir; kısmi ters kayıt yapılmaz.
+- Kısmi hata varsa yükleme tamamen geri alınır ve doğru tutar yeni hareket olarak girilir.
+- Sipariş ödemeleri ve hizmet iadeleri yalnızca ilgili hizmet akışı tarafından yönetilir; kasiyer bunları ters çeviremez.
+- Tam ters kayıt kullanıcı bakiyesini negatife düşürecekse işlem reddedilir.
 - İşlemi yapan kişi, tarih, tutar, işlem türü ve ilgili sipariş/hizmet kaydedilir.
 - Tutarlar PostgreSQL'de kuruş cinsinden `BIGINT` olarak tutulur.
 - TypeScript tarafında parasal değerler `number` ile hesaplanmaz; `bigint` veya güvenli string temsili kullanılır.
