@@ -863,6 +863,181 @@ h2 {
   font-size: 0.78rem;
 }
 
+.catalog-order-form {
+  display: grid;
+  grid-template-columns: 82px minmax(0, 1fr);
+  gap: 10px;
+  align-items: end;
+}
+
+.catalog-order-form label,
+.delivery-code-input {
+  display: grid;
+  gap: 7px;
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.catalog-order-form input,
+.delivery-code-input input {
+  width: 100%;
+  padding: 12px;
+  color: var(--foreground);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+}
+
+.catalog-order-form .primary-action {
+  padding: 13px 14px;
+}
+
+.catalog-order-form .form-message {
+  grid-column: 1 / -1;
+}
+
+.customer-order-list,
+.management-order-list {
+  display: grid;
+  gap: 16px;
+}
+
+.customer-order-card,
+.management-order-card,
+.ordering-control {
+  padding: 24px;
+  background: rgb(255 253 248 / 84%);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 18px 44px rgb(54 69 60 / 7%);
+}
+
+.customer-order-card > header,
+.management-order-card > header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.customer-order-card > header > div,
+.management-order-card > header > div {
+  display: grid;
+  gap: 8px;
+}
+
+.management-order-card > header > div:last-child {
+  justify-items: end;
+}
+
+.customer-order-card time,
+.management-order-card time,
+.management-order-card small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.customer-order-card ul,
+.management-order-card ul {
+  display: grid;
+  gap: 10px;
+  padding: 18px 0;
+  margin: 18px 0;
+  border-top: 1px solid var(--border);
+  border-bottom: 1px solid var(--border);
+  list-style: none;
+}
+
+.customer-order-card li,
+.management-order-card li {
+  display: flex;
+  gap: 20px;
+  justify-content: space-between;
+}
+
+.order-status {
+  width: fit-content;
+  padding: 6px 9px;
+  color: #713f12;
+  background: #fef3c7;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.order-status-READY,
+.order-status-DELIVERED {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.order-status-CANCELLED,
+.order-status-REJECTED,
+.order-status-CANCELLED_BY_CANTEEN {
+  color: var(--muted);
+  background: #e7e9e5;
+}
+
+.delivery-code {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px;
+  margin-bottom: 18px;
+  color: white;
+  background: var(--accent);
+  border-radius: 14px;
+}
+
+.delivery-code strong {
+  font-size: 1.8rem;
+  letter-spacing: 0.16em;
+}
+
+.ordering-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 20px;
+  align-items: center;
+  margin-top: 36px;
+}
+
+.ordering-control > div {
+  display: grid;
+  gap: 7px;
+}
+
+.ordering-control span,
+.ordering-control small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.ordering-control .primary-action {
+  width: auto;
+}
+
+.ordering-control .form-message {
+  grid-column: 1 / -1;
+}
+
+.management-order-card {
+  display: grid;
+  gap: 14px;
+}
+
+.management-order-card .primary-action {
+  width: fit-content;
+  padding: 11px 14px;
+}
+
+.delivery-code-input {
+  max-width: 260px;
+}
+
 .catalog-stock {
   width: fit-content;
   padding: 7px 10px;
@@ -1019,7 +1194,8 @@ h2 {
   .wallet-header,
   .cashier-search,
   .canteen-header,
-  .product-create-section {
+  .product-create-section,
+  .ordering-control {
     grid-template-columns: 1fr;
   }
 
@@ -1142,5 +1318,22 @@ h2 {
 
   .product-form-footer .primary-action {
     width: 100%;
+  }
+
+  .catalog-order-form {
+    grid-template-columns: 1fr;
+  }
+
+  .catalog-order-form .form-message {
+    grid-column: 1;
+  }
+
+  .customer-order-card > header,
+  .management-order-card > header {
+    flex-direction: column;
+  }
+
+  .management-order-card > header > div:last-child {
+    justify-items: start;
   }
 }

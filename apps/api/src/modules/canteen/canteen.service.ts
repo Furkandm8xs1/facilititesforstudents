@@ -9,6 +9,13 @@ import {
 
 import { CanteenRuleError } from './canteen.errors';
 import {
+  parseOrderId,
+  parseOrderingInput,
+  parseOrderTransitionInput,
+  parsePlaceOrderInput,
+} from './canteen-order.input';
+import { CanteenOrderRepository } from './canteen-order.repository';
+import {
   parseCreateProductInput,
   parseProductId,
   parseStockInput,
@@ -19,7 +26,10 @@ import { CanteenRepository } from './canteen.repository';
 
 @Injectable()
 export class CanteenService {
-  constructor(private readonly canteen: CanteenRepository) {}
+  constructor(
+    private readonly canteen: CanteenRepository,
+    private readonly orders: CanteenOrderRepository,
+  ) {}
 
   async getCustomerCatalog() {
     try {
@@ -120,6 +130,80 @@ export class CanteenService {
     }
   }
 
+  async placeOrder(subject: string, rawInput: unknown) {
+    const input = parsePlaceOrderInput(rawInput);
+
+    try {
+      return await this.orders.placeOrder({
+        customerSubject: subject,
+        ...input,
+      });
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
+  async listCustomerOrders(subject: string) {
+    try {
+      return await this.orders.listCustomerOrders(subject);
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
+  async cancelCustomerOrder(subject: string, orderIdValue: unknown) {
+    const orderId = parseOrderId(orderIdValue);
+
+    try {
+      return await this.orders.cancelCustomerOrder({
+        customerSubject: subject,
+        orderId,
+      });
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
+  async listManagementOrders() {
+    try {
+      return await this.orders.listManagementOrders();
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
+  async transitionOrder(
+    subject: string,
+    orderIdValue: unknown,
+    rawInput: unknown,
+  ) {
+    const orderId = parseOrderId(orderIdValue);
+    const transition = parseOrderTransitionInput(rawInput);
+
+    try {
+      return await this.orders.transitionOrder({
+        actorSubject: subject,
+        orderId,
+        ...transition,
+      });
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
+  async setOrderingEnabled(subject: string, rawInput: unknown) {
+    const enabled = parseOrderingInput(rawInput);
+
+    try {
+      return await this.orders.setOrderingEnabled({
+        actorSubject: subject,
+        enabled,
+      });
+    } catch (error) {
+      this.rethrowRuleError(error);
+    }
+  }
+
   private rethrowRuleError(error: unknown): never {
     if (!(error instanceof CanteenRuleError)) {
       throw error;
@@ -148,6 +232,40 @@ export class CanteenService {
         );
       case 'PRODUCT_HAS_RESERVATIONS':
         throw new ConflictException('Rezerve stoğu bulunan ürün arşivlenemez.');
+      case 'CUSTOMER_PROFILE_NOT_FOUND':
+        throw new ForbiddenException(
+          'Sipariş için aktif bir kullanıcı ve cüzdan hesabı gereklidir.',
+        );
+      case 'CANTEEN_CLOSED':
+        throw new ConflictException('Ana Kantin şu anda siparişe kapalı.');
+      case 'PRODUCT_UNAVAILABLE':
+        throw new ConflictException(
+          'Siparişteki ürünlerden biri artık satışta değil.',
+        );
+      case 'INSUFFICIENT_STOCK':
+        throw new ConflictException('Seçilen adet için yeterli stok yok.');
+      case 'WALLET_NOT_FOUND':
+        throw new NotFoundException('Kullanıcının cüzdan hesabı bulunamadı.');
+      case 'INSUFFICIENT_BALANCE':
+        throw new ConflictException(
+          'Sipariş için kullanılabilir bakiye yetersiz.',
+        );
+      case 'ORDER_TOTAL_TOO_LARGE':
+        throw new BadRequestException(
+          'Sipariş toplamı desteklenen sınırı aşıyor.',
+        );
+      case 'ORDER_NOT_FOUND':
+        throw new NotFoundException('Sipariş bulunamadı.');
+      case 'ORDER_STATE_CONFLICT':
+        throw new ConflictException(
+          'Sipariş mevcut durumunda bu işleme uygun değil.',
+        );
+      case 'DELIVERY_CODE_INVALID':
+        throw new BadRequestException('Teslim kodu doğru değil.');
+      case 'IDEMPOTENCY_CONFLICT':
+        throw new ConflictException(
+          'Sipariş güvenlik anahtarı başka bir işlemde kullanılmış.',
+        );
     }
   }
 }

@@ -103,6 +103,34 @@ export interface CanteenMutationResult {
   errors?: Record<string, string>;
 }
 
+export type CanteenOrderStatus =
+  | 'PLACED'
+  | 'ACCEPTED'
+  | 'PREPARING'
+  | 'READY'
+  | 'DELIVERED'
+  | 'CANCELLED'
+  | 'REJECTED'
+  | 'CANCELLED_BY_CANTEEN';
+
+export interface CanteenOrder {
+  id: string;
+  status: CanteenOrderStatus;
+  totalMinor: string;
+  deliveryCode: string;
+  customerName: string;
+  customerPhone: string;
+  items: Array<{
+    productId: string;
+    productName: string;
+    unitPriceMinor: string;
+    quantity: string;
+    lineTotalMinor: string;
+  }>;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export async function getCurrentUser(
   accessToken: string,
 ): Promise<CurrentUserResponse | null> {
@@ -284,6 +312,68 @@ export async function getCanteenManagement(
   return fetchCanteenCatalog(accessToken, '/canteen/manage');
 }
 
+export async function getCanteenOrders(
+  accessToken: string,
+): Promise<CanteenOrder[]> {
+  return fetchCanteenOrders(accessToken, '/canteen/orders');
+}
+
+export async function getCanteenManagementOrders(
+  accessToken: string,
+): Promise<CanteenOrder[]> {
+  return fetchCanteenOrders(accessToken, '/canteen/manage/orders');
+}
+
+export function placeCanteenOrder(
+  accessToken: string,
+  payload: {
+    items: Array<{ productId: string; quantity: string }>;
+    idempotencyKey: string;
+  },
+) {
+  return canteenMutation(
+    accessToken,
+    'POST',
+    '/canteen/orders',
+    payload,
+    'Sipariş alındı. Tutar bakiyenden bloke edildi.',
+  );
+}
+
+export function cancelCanteenOrder(accessToken: string, orderId: string) {
+  return canteenMutation(
+    accessToken,
+    'POST',
+    `/canteen/orders/${encodeURIComponent(orderId)}/cancel`,
+    {},
+    'Sipariş iptal edildi; bakiye ve stok blokesi kaldırıldı.',
+  );
+}
+
+export function transitionCanteenOrder(
+  accessToken: string,
+  orderId: string,
+  payload: { status: CanteenOrderStatus; deliveryCode?: string },
+) {
+  return canteenMutation(
+    accessToken,
+    'PATCH',
+    `/canteen/manage/orders/${encodeURIComponent(orderId)}/status`,
+    payload,
+    'Sipariş durumu güncellendi.',
+  );
+}
+
+export function updateCanteenOrdering(accessToken: string, enabled: boolean) {
+  return canteenMutation(
+    accessToken,
+    'PATCH',
+    '/canteen/manage/ordering',
+    { enabled },
+    enabled ? 'Ana Kantin siparişe açıldı.' : 'Ana Kantin siparişe kapatıldı.',
+  );
+}
+
 export function createOrUpdateCanteenProduct(
   accessToken: string,
   payload: { name: string; priceTl: string; stock: string },
@@ -364,6 +454,23 @@ async function fetchCanteenCatalog(
   }
 
   return (await response.json()) as CanteenCatalog;
+}
+
+async function fetchCanteenOrders(
+  accessToken: string,
+  path: string,
+): Promise<CanteenOrder[]> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    console.error(`GET ${path} başarısız: HTTP ${response.status}`);
+    return [];
+  }
+
+  return (await response.json()) as CanteenOrder[];
 }
 
 async function canteenMutation(

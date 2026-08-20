@@ -9,7 +9,7 @@ const services = [
   {
     title: 'Kantin',
     description: 'Ürünleri incele, sipariş ver ve teslim durumunu takip et.',
-    status: 'Ürünleri görüntüle',
+    status: 'Sipariş ver',
     active: true,
     href: '/canteen',
   },

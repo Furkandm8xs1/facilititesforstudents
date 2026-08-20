@@ -2,8 +2,15 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getCanteenCatalog } from '@/lib/api';
+import {
+  getCanteenCatalog,
+  getCanteenOrders,
+  getWalletOverview,
+} from '@/lib/api';
 import { formatTryMinor } from '@/lib/money';
+
+import { OrderHistory } from './order-history';
+import { OrderProductForm } from './order-product-form';
 
 export default async function CanteenPage() {
   const session = await auth();
@@ -12,7 +19,11 @@ export default async function CanteenPage() {
     redirect('/login');
   }
 
-  const catalog = await getCanteenCatalog(session.apiAccessToken);
+  const [catalog, orders, wallet] = await Promise.all([
+    getCanteenCatalog(session.apiAccessToken),
+    getCanteenOrders(session.apiAccessToken),
+    getWalletOverview(session.apiAccessToken),
+  ]);
   const canManage = session.user.roles.some(
     (role) => role === 'canteen_manager' || role === 'canteen_operator',
   );
@@ -35,8 +46,8 @@ export default async function CanteenPage() {
           <p className="eyebrow">Yurt kantini</p>
           <h1>{catalog?.canteen.name ?? 'Ana Kantin'}</h1>
           <p className="intro">
-            Satışta ve stokta bulunan ürünleri burada görebilirsin. Sipariş
-            verme akışı bir sonraki aşamada etkinleşecek.
+            Satıştaki ürünü ve adedi seç. Sipariş verdiğinde tutar bakiyende,
+            ürünler ise stokta kantin onayına kadar bloke edilir.
           </p>
         </div>
         <div className="canteen-state-card">
@@ -44,7 +55,10 @@ export default async function CanteenPage() {
           <strong>
             {catalog?.canteen.orderingEnabled ? 'Siparişe açık' : 'Kapalı'}
           </strong>
-          <small>Ürün kataloğu görüntülenebilir</small>
+          <small>
+            Kullanılabilir bakiye:{' '}
+            {formatTryMinor(wallet?.account.availableMinor ?? '0')}
+          </small>
         </div>
       </header>
 
@@ -78,8 +92,32 @@ export default async function CanteenPage() {
                   <h3>{product.name}</h3>
                   <strong>{formatTryMinor(product.priceMinor)}</strong>
                 </div>
-                <small>Sipariş yakında</small>
+                <OrderProductForm
+                  productId={product.id}
+                  availableStock={product.availableStock}
+                  orderingEnabled={catalog.canteen.orderingEnabled}
+                />
               </article>
+            ))}
+          </div>
+        )}
+      </section>
+
+      <section aria-labelledby="my-orders-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Takip</p>
+            <h2 id="my-orders-title">Siparişlerim</h2>
+          </div>
+          <span className="network-state">{orders.length} sipariş</span>
+        </div>
+
+        {orders.length === 0 ? (
+          <p className="empty-state">Henüz bir sipariş vermedin.</p>
+        ) : (
+          <div className="customer-order-list">
+            {orders.map((order) => (
+              <OrderHistory key={order.id} order={order} />
             ))}
           </div>
         )}

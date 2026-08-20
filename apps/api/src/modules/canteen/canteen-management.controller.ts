@@ -14,6 +14,28 @@ export class CanteenManagementController {
     return this.canteen.getManagementCatalog();
   }
 
+  @Get('orders')
+  listOrders() {
+    return this.canteen.listManagementOrders();
+  }
+
+  @Patch('ordering')
+  setOrderingEnabled(
+    @Req() request: AuthenticatedRequest,
+    @Body() body: unknown,
+  ) {
+    return this.canteen.setOrderingEnabled(request.user.subject, body);
+  }
+
+  @Patch('orders/:orderId/status')
+  transitionOrder(
+    @Req() request: AuthenticatedRequest,
+    @Param('orderId') orderId: string,
+    @Body() body: unknown,
+  ) {
+    return this.canteen.transitionOrder(request.user.subject, orderId, body);
+  }
+
   @RequireRoles('canteen_manager')
   @Post('products')
   createOrUpdateProduct(

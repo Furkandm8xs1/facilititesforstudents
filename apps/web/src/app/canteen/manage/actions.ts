@@ -6,10 +6,13 @@ import { auth } from '@/auth';
 import {
   archiveCanteenProduct,
   createOrUpdateCanteenProduct,
+  transitionCanteenOrder,
+  updateCanteenOrdering,
   updateCanteenProductDetails,
   updateCanteenProductStock,
   updateCanteenProductVisibility,
   type CanteenMutationResult,
+  type CanteenOrderStatus,
 } from '@/lib/api';
 
 export interface ProductActionState {
@@ -89,6 +92,23 @@ export async function manageProductAction(
         break;
       case 'archive':
         result = await archiveCanteenProduct(session.apiAccessToken, productId);
+        break;
+      case 'ordering-open':
+      case 'ordering-close':
+        result = await updateCanteenOrdering(
+          session.apiAccessToken,
+          intent === 'ordering-open',
+        );
+        break;
+      case 'order-status':
+        result = await transitionCanteenOrder(
+          session.apiAccessToken,
+          formText(formData, 'orderId'),
+          {
+            status: formText(formData, 'targetStatus') as CanteenOrderStatus,
+            deliveryCode: formText(formData, 'deliveryCode'),
+          },
+        );
         break;
       default:
         return { status: 'error', message: 'Ürün işlemi geçerli değil.' };

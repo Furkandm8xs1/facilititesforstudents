@@ -73,3 +73,11 @@ stokla ürün oluşturabilir; aynı adlı ürün yeniden girildiğinde kopya aç
 mevcut kayıt güncellenir. `canteen_operator` ve `canteen_manager` stok ile satış
 durumunu yönetebilir ve ürünü arşivleyebilir. Fiyat ve stok değişiklikleri
 değiştirilemez ürün olaylarıyla denetlenir.
+
+Ana Kantin varsayılan olarak siparişe açıktır; yetkili görevli arayüzden geçici
+olarak kapatabilir. Kullanıcı ürün ve adet seçtiğinde tutar ortak bakiyede,
+ürünler stokta bloke edilir. Görevli siparişi kabul ettiğinde ödeme ve stok
+kesinleşir; ardından hazırlama, hazır ve teslim koduyla teslim adımları izlenir.
+Kullanıcı görevli kabulünden önce iptal edebilir. Sipariş kalemindeki ürün adı ve
+fiyat satış anındaki haliyle saklanır; sonraki fiyat değişiklikleri geçmiş
+siparişleri ve kazancı değiştirmez.

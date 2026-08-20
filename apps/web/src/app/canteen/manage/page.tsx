@@ -2,9 +2,11 @@ import Link from 'next/link';
 import { redirect } from 'next/navigation';
 
 import { auth } from '@/auth';
-import { getCanteenManagement } from '@/lib/api';
+import { getCanteenManagement, getCanteenManagementOrders } from '@/lib/api';
 
 import { CreateProductForm } from './create-product-form';
+import { OrderQueue } from './order-queue';
+import { OrderingControl } from './ordering-control';
 import { ProductEditor } from './product-editor';
 
 export default async function CanteenManagementPage() {
@@ -21,7 +23,10 @@ export default async function CanteenManagementPage() {
     redirect('/');
   }
 
-  const catalog = await getCanteenManagement(session.apiAccessToken);
+  const [catalog, orders] = await Promise.all([
+    getCanteenManagement(session.apiAccessToken),
+    getCanteenManagementOrders(session.apiAccessToken),
+  ]);
 
   return (
     <main className="canteen-shell canteen-management-shell">
@@ -44,6 +49,30 @@ export default async function CanteenManagementPage() {
           </p>
         </div>
       </header>
+
+      {catalog ? (
+        <OrderingControl enabled={catalog.canteen.orderingEnabled} />
+      ) : null}
+
+      <section aria-labelledby="order-queue-title">
+        <div className="section-heading">
+          <div>
+            <p className="eyebrow">Canlı operasyon</p>
+            <h2 id="order-queue-title">Sipariş kuyruğu</h2>
+          </div>
+          <span className="network-state">{orders.length} sipariş</span>
+        </div>
+
+        {orders.length === 0 ? (
+          <p className="empty-state">Henüz sipariş bulunmuyor.</p>
+        ) : (
+          <div className="management-order-list">
+            {orders.map((order) => (
+              <OrderQueue key={order.id} order={order} />
+            ))}
+          </div>
+        )}
+      </section>
 
       {canManageDetails ? (
         <section
