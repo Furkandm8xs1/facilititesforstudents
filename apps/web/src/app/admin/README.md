@@ -17,7 +17,9 @@ creates new accounts.
 4. The users page loads `GET /admin/users`, which reads Keycloak directly and
    returns accounts that completed their first password change without
    requiring a PostgreSQL profile, then renders them as table rows.
-5. The new-user page renders
+5. The page derives an eight-role, two-by-four summary from the already loaded
+   user data without making another API request.
+6. The new-user page renders
    [`create-user-form.tsx`](./users/new/create-user-form.tsx).
 
 ## Role update flow

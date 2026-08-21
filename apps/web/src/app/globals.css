@@ -463,9 +463,15 @@ h2 {
 
 .users-admin-header {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-columns: minmax(280px, 0.8fr) minmax(0, 1.2fr);
   gap: 36px;
-  align-items: end;
+  align-items: start;
+}
+
+.users-admin-tools {
+  display: grid;
+  gap: 14px;
+  justify-items: end;
 }
 
 .add-user-action {
@@ -473,6 +479,68 @@ h2 {
   min-width: 180px;
   text-align: center;
   text-decoration: none;
+}
+
+.role-summary {
+  width: 100%;
+  max-width: 580px;
+  padding: 14px;
+  overflow-x: auto;
+  background: rgb(255 253 248 / 82%);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 14px 34px rgb(54 69 60 / 7%);
+}
+
+.role-summary-heading {
+  display: flex;
+  min-width: 520px;
+  gap: 16px;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px 10px;
+}
+
+.role-summary-heading strong {
+  font-size: 0.82rem;
+}
+
+.role-summary-heading span {
+  color: var(--muted);
+  font-size: 0.72rem;
+}
+
+.role-summary-grid {
+  display: grid;
+  min-width: 520px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  background: var(--border);
+  border: 1px solid var(--border);
+  border-radius: 11px;
+}
+
+.role-summary-item {
+  display: grid;
+  min-height: 74px;
+  padding: 11px 12px;
+  align-content: space-between;
+  background: white;
+}
+
+.role-summary-item strong {
+  color: var(--accent);
+  font-size: 1.45rem;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.04em;
+}
+
+.role-summary-item span {
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
 .user-table {
@@ -1366,6 +1434,14 @@ h2 {
 
   .add-user-action {
     width: fit-content;
+  }
+
+  .users-admin-tools {
+    justify-items: stretch;
+  }
+
+  .role-summary {
+    max-width: none;
   }
 
   .catalog-grid {

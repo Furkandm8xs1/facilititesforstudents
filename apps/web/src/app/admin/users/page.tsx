@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import { auth } from '@/auth';
 import { getAdminUsers } from '@/lib/api';
 
+import { roleOptions } from './role-options';
 import { UserRoleEditor } from './user-role-editor';
 
 export default async function UsersPage() {
@@ -20,6 +21,12 @@ export default async function UsersPage() {
   const users = session.apiAccessToken
     ? await getAdminUsers(session.apiAccessToken)
     : null;
+  const roleSummary = users
+    ? roleOptions.map((role) => ({
+        ...role,
+        count: users.filter((user) => user.roles.includes(role.value)).length,
+      }))
+    : null;
 
   return (
     <main className="admin-shell users-admin-shell">
@@ -35,12 +42,30 @@ export default async function UsersPage() {
             Rollerini görmek ve düzenlemek için kullanıcı satırına tıkla.
           </p>
         </div>
-        <Link
-          className="primary-action add-user-action"
-          href="/admin/users/new"
-        >
-          Yeni kullanıcı ekle
-        </Link>
+        <div className="users-admin-tools">
+          <Link
+            className="primary-action add-user-action"
+            href="/admin/users/new"
+          >
+            Yeni kullanıcı ekle
+          </Link>
+          {roleSummary ? (
+            <aside className="role-summary" aria-label="Rol dağılımı">
+              <div className="role-summary-heading">
+                <strong>Rol dağılımı</strong>
+                <span>{users?.length ?? 0} kullanıcı</span>
+              </div>
+              <div className="role-summary-grid">
+                {roleSummary.map((role) => (
+                  <div className="role-summary-item" key={role.value}>
+                    <strong>{role.count}</strong>
+                    <span>{role.label}</span>
+                  </div>
+                ))}
+              </div>
+            </aside>
+          ) : null}
+        </div>
       </header>
 
       {users === null ? (
