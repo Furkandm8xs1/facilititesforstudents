@@ -76,6 +76,8 @@ button {
   display: flex;
   gap: 12px;
   align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
 }
 
 .role-count {
@@ -451,6 +453,192 @@ h2 {
 }
 
 .form-submit:disabled {
+  cursor: wait;
+  opacity: 0.64;
+}
+
+.users-admin-shell {
+  width: min(1120px, calc(100% - 40px));
+}
+
+.users-admin-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 36px;
+  align-items: end;
+}
+
+.add-user-action {
+  width: auto;
+  min-width: 180px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.user-table {
+  overflow-x: auto;
+  margin-top: 34px;
+  background: rgb(255 253 248 / 82%);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 18px 46px rgb(54 69 60 / 7%);
+}
+
+.user-table-grid {
+  min-width: 860px;
+}
+
+.user-table-header,
+.user-table-summary {
+  display: grid;
+  grid-template-columns:
+    64px minmax(190px, 1.5fr) minmax(150px, 1fr) 110px 90px
+    120px;
+  gap: 16px;
+  align-items: center;
+}
+
+.user-table-header {
+  padding: 13px 18px;
+  color: var(--muted);
+  background: #e8ece6;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.user-table-row + .user-table-row {
+  border-top: 1px solid var(--border);
+}
+
+.user-table-summary {
+  padding: 16px 18px;
+  cursor: pointer;
+  list-style: none;
+  transition: background 160ms ease;
+}
+
+.user-table-summary::-webkit-details-marker {
+  display: none;
+}
+
+.user-table-summary:hover,
+.user-table-row[open] .user-table-summary {
+  background: white;
+}
+
+.user-row-number,
+.user-row-phone,
+.user-row-role-count {
+  color: var(--muted);
+  font-size: 0.82rem;
+}
+
+.user-row-number {
+  font-variant-numeric: tabular-nums;
+}
+
+.user-row-name {
+  display: flex;
+  min-width: 0;
+  gap: 8px;
+  align-items: center;
+}
+
+.user-row-name > strong {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-row-action {
+  color: var(--accent);
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-align: right;
+}
+
+.row-action-close {
+  display: none;
+}
+
+.user-table-row[open] .row-action-open {
+  display: none;
+}
+
+.user-table-row[open] .row-action-close {
+  display: inline;
+}
+
+.self-badge,
+.user-status {
+  width: fit-content;
+  padding: 6px 9px;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.self-badge {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.user-status-ACTIVE {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.user-status-SUSPENDED {
+  color: #713f12;
+  background: #fef3c7;
+}
+
+.user-status-DEPARTED {
+  color: var(--muted);
+  background: #e7e9e5;
+}
+
+.user-row-role-form {
+  padding: 24px 18px 22px;
+  background: #f7f6f1;
+  border-top: 1px solid var(--border);
+}
+
+.user-base-role {
+  margin-bottom: 14px;
+}
+
+.user-role-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.user-role-option {
+  height: 100%;
+}
+
+.user-role-option:has(input:disabled) {
+  cursor: not-allowed;
+  opacity: 0.72;
+}
+
+.user-role-footer {
+  display: flex;
+  gap: 20px;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 22px;
+}
+
+.user-role-footer .primary-action {
+  width: auto;
+  min-width: 160px;
+}
+
+.user-role-footer .primary-action:disabled {
   cursor: wait;
   opacity: 0.64;
 }
@@ -1171,8 +1359,13 @@ h2 {
   .cashier-search,
   .canteen-header,
   .product-create-section,
-  .ordering-control {
+  .ordering-control,
+  .users-admin-header {
     grid-template-columns: 1fr;
+  }
+
+  .add-user-action {
+    width: fit-content;
   }
 
   .catalog-grid {
@@ -1211,18 +1404,32 @@ h2 {
     padding-top: 32px;
   }
 
+  .users-admin-shell {
+    width: min(100% - 28px, 1120px);
+  }
+
   .admin-form {
     padding: 24px 18px;
   }
 
   .form-grid,
-  .role-grid {
+  .role-grid,
+  .user-role-grid {
     grid-template-columns: 1fr;
   }
 
   .form-footer {
     align-items: stretch;
     flex-direction: column;
+  }
+
+  .user-role-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .user-role-footer .primary-action {
+    width: 100%;
   }
 
   .form-submit {

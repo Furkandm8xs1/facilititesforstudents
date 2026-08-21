@@ -1,17 +1,46 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 
-import type { AssignableUserRole, CreateUserInput } from './create-user.input';
+import {
+  ASSIGNABLE_USER_ROLES,
+  type AssignableUserRole,
+  type CreateUserInput,
+} from './create-user.input';
 
 interface KeycloakRole {
   id: string;
   name: string;
 }
 
+interface KeycloakUserRepresentation {
+  id?: string;
+  username?: string;
+  firstName?: string;
+  lastName?: string;
+  enabled?: boolean;
+  requiredActions?: string[];
+  serviceAccountClientId?: string;
+}
+
+export interface KeycloakUserAdministrationDetails {
+  id: string;
+  username: string;
+  firstName: string;
+  lastName: string;
+  enabled: boolean;
+  roles: string[];
+  initialPasswordChanged: boolean;
+}
+
 interface TokenResponse {
   access_token?: string;
   expires_in?: number;
 }
+
+const managedRealmRoles = new Set(['portal_user', 'platform_admin']);
+const managedClientRoles = new Set<string>(
+  ASSIGNABLE_USER_ROLES.filter((role) => role !== 'platform_admin'),
+);
 
 export class KeycloakAdminError extends Error {
   constructor(
@@ -33,6 +62,7 @@ export class KeycloakAdminService {
   private readonly portalApiClientUuid: string;
   private accessToken?: string;
   private accessTokenExpiresAt = 0;
+  private accessTokenRequest?: Promise<string>;
 
   constructor(config: ConfigService) {
     const issuer = config.get<string>('KEYCLOAK_ISSUER') ?? '';
@@ -128,10 +158,102 @@ export class KeycloakAdminService {
     }
   }
 
+  async getUserAdministrationDetails(
+    userId: string,
+  ): Promise<KeycloakUserAdministrationDetails> {
+    const encodedUserId = encodeURIComponent(userId);
+    const [user, roles] = await Promise.all([
+      this.getJson<KeycloakUserRepresentation>(`/users/${encodedUserId}`),
+      this.getUserApplicationRoles(userId),
+    ]);
+
+    return this.toAdministrationDetails(user, roles);
+  }
+
+  async listUserAdministrationDetails(): Promise<
+    KeycloakUserAdministrationDetails[]
+  > {
+    const users = (await this.listUsers()).filter((user) =>
+      this.isManageableUser(user),
+    );
+
+    return Promise.all(
+      users.map(async (user) =>
+        this.toAdministrationDetails(
+          user,
+          await this.getUserApplicationRoles(user.id),
+        ),
+      ),
+    );
+  }
+
+  async replaceUserApplicationRoles(
+    userId: string,
+    roles: AssignableUserRole[],
+  ): Promise<KeycloakUserAdministrationDetails> {
+    const encodedUserId = encodeURIComponent(userId);
+    const [user, realmRoles, clientRoles] = await Promise.all([
+      this.getJson<KeycloakUserRepresentation>(`/users/${encodedUserId}`),
+      this.getJson<KeycloakRole[]>(
+        `/users/${encodedUserId}/role-mappings/realm`,
+      ),
+      this.getJson<KeycloakRole[]>(
+        `/users/${encodedUserId}/role-mappings/clients/${this.portalApiClientUuid}`,
+      ),
+    ]);
+    const desiredRealmRoles = new Set([
+      'portal_user',
+      ...(roles.includes('platform_admin') ? ['platform_admin'] : []),
+    ]);
+    const desiredClientRoles = roles.filter(
+      (role) => role !== 'platform_admin',
+    );
+    const desiredClientRoleNames = new Set<string>(desiredClientRoles);
+    const currentRealmRoles = realmRoles.filter((role) =>
+      managedRealmRoles.has(role.name),
+    );
+    const currentClientRoles = clientRoles.filter((role) =>
+      managedClientRoles.has(role.name),
+    );
+    const currentRealmNames = new Set(
+      currentRealmRoles.map((role) => role.name),
+    );
+    const currentClientNames = new Set(
+      currentClientRoles.map((role) => role.name),
+    );
+    const realmRolesToAdd = [...desiredRealmRoles].filter(
+      (role) => !currentRealmNames.has(role),
+    );
+    const clientRolesToAdd = desiredClientRoles.filter(
+      (role) => !currentClientNames.has(role),
+    );
+    const realmRolesToRemove = currentRealmRoles.filter(
+      (role) => !desiredRealmRoles.has(role.name),
+    );
+    const clientRolesToRemove = currentClientRoles.filter(
+      (role) => !desiredClientRoleNames.has(role.name),
+    );
+
+    await Promise.all([
+      this.assignRealmRoles(userId, realmRolesToAdd),
+      this.assignClientRoles(userId, clientRolesToAdd),
+    ]);
+    await Promise.all([
+      this.removeRealmRoles(userId, realmRolesToRemove),
+      this.removeClientRoles(userId, clientRolesToRemove),
+    ]);
+
+    return this.toAdministrationDetails(user, ['portal_user', ...roles]);
+  }
+
   private async assignRealmRoles(
     userId: string,
     roleNames: string[],
   ): Promise<void> {
+    if (roleNames.length === 0) {
+      return;
+    }
+
     const available = await this.getJson<KeycloakRole[]>(
       `/users/${encodeURIComponent(userId)}/role-mappings/realm/available`,
     );
@@ -181,6 +303,113 @@ export class KeycloakAdminService {
     }
   }
 
+  private async removeRealmRoles(
+    userId: string,
+    roles: KeycloakRole[],
+  ): Promise<void> {
+    await this.removeRoleMappings(
+      `/users/${encodeURIComponent(userId)}/role-mappings/realm`,
+      roles,
+      'Realm rolleri kaldırılamadı.',
+    );
+  }
+
+  private async removeClientRoles(
+    userId: string,
+    roles: KeycloakRole[],
+  ): Promise<void> {
+    await this.removeRoleMappings(
+      `/users/${encodeURIComponent(userId)}/role-mappings/clients/${this.portalApiClientUuid}`,
+      roles,
+      'Servis rolleri kaldırılamadı.',
+    );
+  }
+
+  private async removeRoleMappings(
+    path: string,
+    roles: KeycloakRole[],
+    errorMessage: string,
+  ): Promise<void> {
+    if (roles.length === 0) {
+      return;
+    }
+
+    const response = await this.adminRequest(path, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(roles),
+    });
+
+    if (response.status !== 204) {
+      throw await this.responseError(response, errorMessage);
+    }
+  }
+
+  private async getUserApplicationRoles(userId: string): Promise<string[]> {
+    const encodedUserId = encodeURIComponent(userId);
+    const [realmRoles, clientRoles] = await Promise.all([
+      this.getJson<KeycloakRole[]>(
+        `/users/${encodedUserId}/role-mappings/realm`,
+      ),
+      this.getJson<KeycloakRole[]>(
+        `/users/${encodedUserId}/role-mappings/clients/${this.portalApiClientUuid}`,
+      ),
+    ]);
+    const assigned = new Set(
+      [...realmRoles, ...clientRoles].map((role) => role.name),
+    );
+
+    return ['portal_user', ...ASSIGNABLE_USER_ROLES].filter((role) =>
+      assigned.has(role),
+    );
+  }
+
+  private async listUsers(): Promise<KeycloakUserRepresentation[]> {
+    const users: KeycloakUserRepresentation[] = [];
+    const pageSize = 100;
+    let first = 0;
+    let page: KeycloakUserRepresentation[];
+
+    do {
+      page = await this.getJson<KeycloakUserRepresentation[]>(
+        `/users?first=${first}&max=${pageSize}`,
+      );
+      users.push(...page);
+      first += page.length;
+    } while (page.length === pageSize);
+
+    return users;
+  }
+
+  private isManageableUser(
+    user: KeycloakUserRepresentation,
+  ): user is KeycloakUserRepresentation & { id: string; username: string } {
+    return Boolean(user.id && user.username && !user.serviceAccountClientId);
+  }
+
+  private toAdministrationDetails(
+    user: KeycloakUserRepresentation,
+    roles: string[],
+  ): KeycloakUserAdministrationDetails {
+    if (!user.id || !user.username) {
+      throw new KeycloakAdminError(
+        502,
+        'Keycloak kullanıcı kimliği veya kullanıcı adı döndürmedi.',
+      );
+    }
+
+    return {
+      id: user.id,
+      username: user.username,
+      firstName: user.firstName?.trim() || user.username,
+      lastName: user.lastName?.trim() || '',
+      enabled: user.enabled !== false,
+      roles,
+      initialPasswordChanged:
+        !user.requiredActions?.includes('UPDATE_PASSWORD'),
+    };
+  }
+
   private selectRoles(
     available: KeycloakRole[],
     roleNames: readonly string[],
@@ -226,6 +455,7 @@ export class KeycloakAdminService {
     if (response.status === 401 && retry) {
       this.accessToken = undefined;
       this.accessTokenExpiresAt = 0;
+      this.accessTokenRequest = undefined;
       return this.adminRequest(path, init, false);
     }
 
@@ -237,6 +467,18 @@ export class KeycloakAdminService {
       return this.accessToken;
     }
 
+    if (!this.accessTokenRequest) {
+      this.accessTokenRequest = this.requestAccessToken();
+    }
+
+    try {
+      return await this.accessTokenRequest;
+    } finally {
+      this.accessTokenRequest = undefined;
+    }
+  }
+
+  private async requestAccessToken(): Promise<string> {
     const response = await fetch(
       `${this.baseUrl}/realms/${encodeURIComponent(this.realm)}/protocol/openid-connect/token`,
       {

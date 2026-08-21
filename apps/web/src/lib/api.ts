@@ -28,6 +28,22 @@ export interface CreateUserResult {
   errors?: Record<string, string>;
 }
 
+export interface AdminUser {
+  id: string;
+  keycloakSubject: string;
+  phoneE164: string;
+  firstName: string;
+  lastName: string;
+  status: 'ACTIVE' | 'SUSPENDED' | 'DEPARTED';
+  roles: string[];
+}
+
+export interface UserRoleMutationResult {
+  ok: boolean;
+  message: string;
+  errors?: Record<string, string>;
+}
+
 export interface WalletAccount {
   accountId: string;
   userProfileId: string;
@@ -174,6 +190,58 @@ export async function createUser(
   }
 
   return { ok: true, message: 'Kullanıcı başarıyla oluşturuldu.' };
+}
+
+export async function getAdminUsers(
+  accessToken: string,
+): Promise<AdminUser[] | null> {
+  const response = await fetch(`${process.env.API_BASE_URL}/admin/users`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    console.error(`GET /admin/users başarısız: HTTP ${response.status}`);
+    return null;
+  }
+
+  return (await response.json()) as AdminUser[];
+}
+
+export async function updateAdminUserRoles(
+  accessToken: string,
+  userId: string,
+  roles: string[],
+): Promise<UserRoleMutationResult> {
+  const response = await fetch(
+    `${process.env.API_BASE_URL}/admin/users/${encodeURIComponent(userId)}/roles`,
+    {
+      method: 'PATCH',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ roles }),
+      cache: 'no-store',
+    },
+  );
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string | string[];
+    errors?: Record<string, string>;
+  };
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message:
+        typeof body.message === 'string'
+          ? body.message
+          : 'Kullanıcı rolleri güncellenemedi.',
+      errors: body.errors,
+    };
+  }
+
+  return { ok: true, message: 'Kullanıcı rolleri güncellendi.' };
 }
 
 export async function getWalletOverview(

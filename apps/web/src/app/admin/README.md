@@ -1,17 +1,34 @@
 # Administrator UI
 
-The administrator feature currently creates managed portal users.
+The administrator feature lists managed portal users, updates their roles, and
+creates new accounts.
 
 ## Route
 
-`/admin/users/new` requires `platform_admin`.
+- `/admin/users` requires `platform_admin` and lists portal users with role
+  editors.
+- `/admin/users/new` requires `platform_admin` and creates a managed account.
 
 ## Render flow
 
-1. [`users/new/page.tsx`](./users/new/page.tsx) reads the NextAuth session.
+1. The administrator page reads the NextAuth session.
 2. Missing authentication redirects to `/login`.
 3. Missing `platform_admin` redirects to `/`.
-4. The page renders [`create-user-form.tsx`](./users/new/create-user-form.tsx).
+4. The users page loads `GET /admin/users`, which reads Keycloak directly and
+   returns accounts that completed their first password change without
+   requiring a PostgreSQL profile, then renders them as table rows.
+5. The new-user page renders
+   [`create-user-form.tsx`](./users/new/create-user-form.tsx).
+
+## Role update flow
+
+1. Each user table row expands on click; the collapsed row keeps roles hidden.
+2. The expanded editor displays the required `portal_user` role and the shared
+   assignable role catalog.
+3. `users/actions.ts` rechecks `platform_admin` before calling the API.
+4. The API updates only managed application roles in Keycloak.
+5. An administrator cannot remove their own `platform_admin` role.
+6. The page is revalidated after a successful update.
 
 ## Form flow
 

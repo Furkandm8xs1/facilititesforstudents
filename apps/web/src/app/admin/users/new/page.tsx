@@ -18,8 +18,8 @@ export default async function NewUserPage() {
 
   return (
     <main className="admin-shell">
-      <Link className="back-link" href="/">
-        ← Portala dön
+      <Link className="back-link" href="/admin/users">
+        ← Kullanıcılara dön
       </Link>
       <header className="admin-header">
         <div>

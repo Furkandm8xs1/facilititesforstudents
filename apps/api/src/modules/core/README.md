@@ -5,10 +5,12 @@ profile. Keycloak owns credentials; PostgreSQL owns application data.
 
 ## Endpoints
 
-| Method | Path                  | Role             | Purpose                                                    |
-| ------ | --------------------- | ---------------- | ---------------------------------------------------------- |
-| `GET`  | `/api/v1/me`          | Authenticated    | Return token identity plus the matching PostgreSQL profile |
-| `POST` | `/api/v1/admin/users` | `platform_admin` | Create a user, temporary password, roles, and profile      |
+| Method  | Path                                | Role             | Purpose                                                    |
+| ------- | ----------------------------------- | ---------------- | ---------------------------------------------------------- |
+| `GET`   | `/api/v1/me`                        | Authenticated    | Return token identity plus the matching PostgreSQL profile |
+| `GET`   | `/api/v1/admin/users`               | `platform_admin` | List eligible Keycloak users with their application roles  |
+| `POST`  | `/api/v1/admin/users`               | `platform_admin` | Create a user, temporary password, roles, and profile      |
+| `PATCH` | `/api/v1/admin/users/:userId/roles` | `platform_admin` | Replace one user's assignable application roles            |
 
 ## User creation flow
 
@@ -42,6 +44,17 @@ therefore applies compensation:
   deleted.
 - If that cleanup also fails, the API returns a high-severity error so an
   administrator can repair the partial record.
+
+## Role administration
+
+The user list comes directly from Keycloak and excludes service accounts and
+accounts that still have the `UPDATE_PASSWORD` required action. A PostgreSQL
+profile is not required for visibility or role assignment, so a stale or
+missing profile-to-subject link cannot hide an authenticated user. Current
+application roles are read from Keycloak. Role updates use the Keycloak user ID,
+preserve `portal_user` and all unmanaged Keycloak roles, replace only the
+portal's assignable realm/client roles, and reject attempts by an administrator
+to remove their own `platform_admin` role.
 
 ## Data ownership
 

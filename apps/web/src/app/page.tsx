@@ -60,8 +60,8 @@ export default async function Home() {
         <div className="account-actions">
           <span className="role-count">{session.user.roles.length} yetki</span>
           {session.user.roles.includes('platform_admin') ? (
-            <Link className="text-action" href="/admin/users/new">
-              Kullanıcı ekle
+            <Link className="text-action" href="/admin/users">
+              Kullanıcılar
             </Link>
           ) : null}
           {session.user.roles.includes('wallet_cashier') ? (
