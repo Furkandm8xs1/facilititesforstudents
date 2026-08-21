@@ -35,6 +35,22 @@
         {
           "name": "wallet_cashier",
           "description": "Nakit yükleme ve gerekçeli para düzeltmesi yapar"
+        },
+        {
+          "name": "kitchen_operator",
+          "description": "Mutfak günlük işlemlerini yönetir"
+        },
+        {
+          "name": "kitchen_manager",
+          "description": "Mutfak ayarlarını ve yönetim işlemlerini yürütür"
+        },
+        {
+          "name": "laundry_operator",
+          "description": "Çamaşırhane günlük işlemlerini yönetir"
+        },
+        {
+          "name": "laundry_manager",
+          "description": "Çamaşırhane ayarlarını ve yönetim işlemlerini yürütür"
         }
       ]
     }

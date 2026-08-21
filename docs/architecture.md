@@ -119,6 +119,10 @@ Bir kişinin öğrenci veya yönetici olması, kantin göreviyle aynı kavram de
 | `platform_admin`   | Kullanıcı oluşturur; hesap durumlarını ve rol atamalarını yönetir.                               |
 | `canteen_operator` | Sipariş kuyruğunu yönetir; stok değiştirir; ürünü satışa açar veya kapatır.                      |
 | `canteen_manager`  | Operatör yetkilerine ek olarak ürün oluşturur ve fiyat değiştirir.                               |
+| `kitchen_operator` | Mutfak modülü devreye alındığında günlük mutfak işlemlerini yönetir.                             |
+| `kitchen_manager`  | Mutfak modülü devreye alındığında ayarları ve yönetim işlemlerini yürütür.                       |
+| `laundry_operator` | Çamaşırhane modülü devreye alındığında günlük operasyonları yönetir.                             |
+| `laundry_manager`  | Çamaşırhane modülü devreye alındığında ayarları ve yönetim işlemlerini yürütür.                  |
 | `wallet_cashier`   | Nakit karşılığı bakiye yükler ve hatalı para işlemleri için ters kayıt oluşturur.                |
 
 Keycloak'ın teknik yönetici rolleri işletme rollerinden ayrı tutulacaktır. Uygulama yöneticilerine gereksiz Keycloak yönetim yetkileri verilmeyecektir.

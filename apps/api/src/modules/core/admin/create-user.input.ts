@@ -4,6 +4,10 @@ export const ASSIGNABLE_USER_ROLES = [
   'platform_admin',
   'canteen_manager',
   'canteen_operator',
+  'kitchen_manager',
+  'kitchen_operator',
+  'laundry_manager',
+  'laundry_operator',
   'wallet_cashier',
 ] as const;
 

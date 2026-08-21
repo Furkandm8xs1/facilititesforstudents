@@ -33,4 +33,26 @@ describe('parseCreateUserInput', () => {
       }),
     ).toThrow(BadRequestException);
   });
+
+  it('accepts kitchen and laundry roles', () => {
+    const input = parseCreateUserInput({
+      firstName: 'Ayşe',
+      lastName: 'Yılmaz',
+      phoneE164: '+905551112233',
+      temporaryPassword: 'gecici-parola',
+      roles: [
+        'kitchen_operator',
+        'kitchen_manager',
+        'laundry_operator',
+        'laundry_manager',
+      ],
+    });
+
+    expect(input.roles).toEqual([
+      'kitchen_operator',
+      'kitchen_manager',
+      'laundry_operator',
+      'laundry_manager',
+    ]);
+  });
 });

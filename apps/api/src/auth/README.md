@@ -721,13 +721,17 @@ Endpoint `canteen_manager` veya `canteen_operator` istediği için kullanıcıda
 
 ## 14. Mevcut roller
 
-| Rol                | Temel yetki                                       |
-| ------------------ | ------------------------------------------------- |
-| `portal_user`      | Genel portal erişimi                              |
-| `platform_admin`   | Uygulama kullanıcıları oluşturma                  |
-| `wallet_cashier`   | Cüzdan arama, bakiye yükleme ve yükleme geri alma |
-| `canteen_manager`  | Yemekhane kataloğunun tam yönetimi                |
-| `canteen_operator` | Stok, görünürlük, sipariş durumu ve sipariş akışı |
+| Rol                | Temel yetki                                        |
+| ------------------ | -------------------------------------------------- |
+| `portal_user`      | Genel portal erişimi                               |
+| `platform_admin`   | Uygulama kullanıcıları oluşturma                   |
+| `wallet_cashier`   | Cüzdan arama, bakiye yükleme ve yükleme geri alma  |
+| `canteen_manager`  | Yemekhane kataloğunun tam yönetimi                 |
+| `canteen_operator` | Stok, görünürlük, sipariş durumu ve sipariş akışı  |
+| `kitchen_manager`  | Gelecekteki mutfak modülünün yönetim işlemleri     |
+| `kitchen_operator` | Gelecekteki mutfak modülünün günlük işlemleri      |
+| `laundry_manager`  | Gelecekteki çamaşırhane modülünün yönetimi         |
+| `laundry_operator` | Gelecekteki çamaşırhane modülünün günlük işlemleri |
 
 ## 15. Testlerin anlattığı davranış
 

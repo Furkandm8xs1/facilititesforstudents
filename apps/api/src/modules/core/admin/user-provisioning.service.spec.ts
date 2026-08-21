@@ -14,6 +14,10 @@ const input = {
     'platform_admin',
     'canteen_manager',
     'canteen_operator',
+    'kitchen_manager',
+    'kitchen_operator',
+    'laundry_manager',
+    'laundry_operator',
     'wallet_cashier',
   ],
 };
