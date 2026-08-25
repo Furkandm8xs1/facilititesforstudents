@@ -1,102 +1,160 @@
-# Yurt Hizmet Portalı
+# Dormitory Services Portal
 
-Yurt içi ağda çalışan merkezi giriş, ortak cüzdan ve kantin uygulaması.
+A self-hosted portal that provides centralized authentication, a shared wallet,
+and canteen services for a dormitory network.
 
-Ürün kapsamı ve mimari kararlar için [mimari belgesine](docs/architecture.md) bakın.
-Kodun İngilizce teknik rehberleri için [uygulama dokümantasyonu dizininden](apps/README.md)
-başlayın.
+The complete application runs as four Docker containers. You do not need to run
+`npm run dev` on the host machine to use the system.
 
-## Teknolojiler
+## Architecture
 
-- Next.js + TypeScript
-- NestJS + TypeScript
-- PostgreSQL
-- Keycloak
+| Service    | Technology              | Container           | Host address                          |
+| ---------- | ----------------------- | ------------------- | ------------------------------------- |
+| Web portal | Next.js 16 and React 19 | `hizmet-web-1`      | `http://localhost:3000`               |
+| API        | NestJS 11               | `hizmet-api-1`      | `http://localhost:3001/api/v1/health` |
+| Identity   | Keycloak 26             | `hizmet-keycloak-1` | `http://keycloak.localhost:8080`      |
+| Database   | PostgreSQL 18           | `hizmet-postgres-1` | `127.0.0.1:55432`                     |
 
-## Docker ile çalıştırma
+The browser talks to the Next.js web container and Keycloak. The Next.js server
+calls the NestJS API over the private Docker network. The API and Keycloak both
+store their data in PostgreSQL. Application and identity data survive container
+replacement because PostgreSQL uses the named volume `hizmet_postgres_data`.
 
-Gereksinimler:
+For architecture decisions, see [docs/architecture.md](docs/architecture.md).
+For a detailed Docker tutorial, start with
+[docs/docker/README.md](docs/docker/README.md).
 
-- Docker ve Docker Compose
+## Requirements
 
-Kök ortam dosyasını hazırlayın:
+- Docker Desktop, or Docker Engine with the Docker Compose plugin
+- Git for cloning the repository
+
+Node.js and npm are not required on the host when the application is run only
+through Docker. The npm Docker commands in `package.json` are optional wrappers
+around the equivalent `docker compose` commands.
+
+## First startup
+
+Create the local environment file:
 
 ```bash
 cp .env.example .env
 ```
 
-`.env` içindeki `AUTH_SECRET` değerini uzun ve rastgele bir değerle değiştirin.
-Örnek parolalar ve istemci gizlisi yalnızca yerel geliştirme içindir.
+Open `.env` and replace `AUTH_SECRET` with a long random value. If OpenSSL is
+available, one way to generate it is:
 
-PostgreSQL, Keycloak, API ve web container'larını oluşturup başlatın:
+```bash
+openssl rand -base64 32
+```
+
+The passwords and client secrets in `.env.example` are development defaults.
+Do not reuse them in a production environment and never commit `.env`.
+
+Build the web and API images, create the containers, and start all four
+services:
+
+```bash
+docker compose up -d --build
+```
+
+The equivalent npm wrapper is:
 
 ```bash
 npm run docker:up
 ```
 
-API container'ı başlarken bekleyen veritabanı göçlerini otomatik uygular. Servis
-durumlarını `docker compose ps`, logları ise aşağıdaki komutla izleyebilirsiniz:
+The API container automatically runs all pending database migrations before it
+starts NestJS. Migrations are recorded in `public.schema_migration`, so already
+applied migrations are skipped on later container starts.
+
+Check the result:
 
 ```bash
-npm run docker:logs
+docker compose ps
+docker compose logs --tail=100 web api keycloak postgres
 ```
 
-Container'ları durdurmak için `npm run docker:down` kullanın. Bu komut
-`hizmet_postgres_data` volume'unu ve verileri korur. Verileri de silmek
-istemediğiniz sürece `docker compose down -v` kullanmayın.
+Open `http://localhost:3000`. An unauthenticated request is redirected to the
+portal login page, and the login action redirects to Keycloak at
+`http://keycloak.localhost:8080`.
 
-Yerel adresler:
-
-- Portal: `http://localhost:3000`
-- API sağlık kontrolü: `http://localhost:3001/api/v1/health`
-- Keycloak: `http://keycloak.localhost:8080`
-
-## Kaynak kodu host üzerinde geliştirme
-
-Mac üzerinde daha hızlı hot reload için yalnızca PostgreSQL ile Keycloak'ı
-Docker'da, web ve API süreçlerini host üzerinde çalıştırabilirsiniz. Bunun için
-Node.js 24 ve npm 11 gerekir:
+## Everyday commands
 
 ```bash
-cp apps/api/.env.example apps/api/.env.local
-cp apps/web/.env.example apps/web/.env.local
-npm install
-npm run infra:up
-npm run db:migrate
-npm run dev
+# Start existing containers. Add --build after source or dependency changes.
+docker compose up -d
+docker compose up -d --build
+
+# Show service and health status.
+docker compose ps
+
+# Follow all logs, or only selected services.
+docker compose logs -f
+docker compose logs -f web api
+
+# Restart one service.
+docker compose restart api
+
+# Stop and remove containers and the private network.
+# The PostgreSQL named volume is preserved.
+docker compose down
 ```
 
-Bu modda Keycloak adresi `http://localhost:8080` olarak kalır. Docker ile çalışan
-web ve API container'larını önce `npm run docker:down` ile durdurun; aksi halde
-3000 ve 3001 portları çakışır.
+Do not run `docker compose down -v` unless you intentionally want to delete the
+PostgreSQL volume and all application and Keycloak data.
 
-Portal giriş bilgilerini Keycloak yönetir. API sağlık kontrolü herkese açıktır;
-diğer API uçları geçerli bir `portal-api` erişim belirteci ister.
+## Rebuilding after a code change
 
-`platform_admin` rolündeki kullanıcılar portalın **Kullanıcı ekle** bağlantısından
-telefon numarası, geçici parola ve servis rolleriyle hesap oluşturabilir. Yeni
-hesap ilk girişinde parolasını değiştirmek zorundadır. API, Keycloak işlemi ile
-PostgreSQL profil kaydından biri başarısız olursa yeni hesabı telafi ederek yarım
-kayıt bırakmaz.
+The web and API containers run optimized production builds. Source files are
+copied into their images and are not bind-mounted into the running containers.
+After changing application code, rebuild the affected service:
 
-Her kullanıcı için otomatik olarak ortak bir TRY cüzdanı açılır. Kullanıcılar
-portalın **Ortak bakiye** kartından kullanılabilir bakiyelerini, blokelerini ve
-hareketlerini görebilir. `wallet_cashier` rolündeki görevliler **Nakit yönetimi**
-ekranında telefon numarasıyla kullanıcı bulup tam TL bakiye yükleyebilir. Kasiyer
-kendi hesabına yükleme yapamaz; hatalı nakit yükleme gerekçeyle, tam tutarıyla ve
-yalnızca bir kez ters çevrilebilir.
+```bash
+docker compose up -d --build web
+docker compose up -d --build api
+```
 
-Portalın **Kantin** kartı yalnızca Ana Kantin’in satışta ve stokta bulunan
-ürünlerini gösterir. `canteen_manager` rolü ürün adı, tam TL fiyatı ve tam adet
-stokla ürün oluşturabilir; aynı adlı ürün yeniden girildiğinde kopya açılmaz,
-mevcut kayıt güncellenir. `canteen_operator` ve `canteen_manager` stok ile satış
-durumunu yönetebilir ve ürünü arşivleyebilir. Fiyat ve stok değişiklikleri
-değiştirilemez ürün olaylarıyla denetlenir.
+To rebuild and reconcile the entire stack:
 
-Ana Kantin varsayılan olarak siparişe açıktır; yetkili görevli arayüzden geçici
-olarak kapatabilir. Kullanıcı ürün ve adet seçtiğinde tutar ortak bakiyeden,
-ürünler stoktan anında düşer; ayrıca görevli kabulü gerekmez. Görevli siparişi
-hazırlanıyor, hazır ve teslim edildi adımlarından geçirir; teslim kodu kullanılmaz.
-Kullanıcı hazırlama başlamadan iptal edebilir. Sipariş kalemindeki ürün adı ve
-fiyat satış anındaki haliyle saklanır; sonraki fiyat değişiklikleri geçmiş
-siparişleri ve kazancı değiştirmez.
+```bash
+docker compose up -d --build
+```
+
+Docker reuses unchanged image layers, so later builds are usually faster than
+the first build.
+
+## Data persistence
+
+PostgreSQL stores both databases in `hizmet_postgres_data`:
+
+- `hizmet` contains profiles, wallets, ledger entries, products, stock, and
+  orders.
+- `keycloak` contains users, credentials, roles, clients, and sessions managed
+  by Keycloak.
+
+Stopping, restarting, or replacing a container does not delete this named
+volume. Back up PostgreSQL before database upgrades or destructive maintenance.
+The [operations guide](docs/docker/04-operations.md) contains backup, inspection,
+and troubleshooting commands.
+
+## Product capabilities
+
+- Keycloak owns authentication, password changes, and role claims.
+- Platform administrators can create users and assign service roles.
+- Each user receives a shared TRY wallet automatically.
+- Wallet cashiers can deposit whole-TRY cash amounts and reverse an incorrect
+  deposit once with an audit reason.
+- Canteen managers can create, price, stock, list, and archive products.
+- Users can place and cancel eligible orders using their shared wallet balance.
+- Canteen staff can move orders through preparing, ready, and delivered states.
+- Prices, stock changes, wallet movements, and order history are stored with
+  transactional and audit-oriented rules.
+
+## Further documentation
+
+- [Docker learning guide](docs/docker/README.md)
+- [System architecture](docs/architecture.md)
+- [Application map](apps/README.md)
+- [API guide](apps/api/README.md)
+- [Web guide](apps/web/README.md)
