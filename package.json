@@ -20,9 +20,12 @@
     "db:migrate": "npm run db:migrate --workspace @hizmet/api",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "infra:up": "docker compose up -d",
-    "infra:down": "docker compose down",
-    "infra:logs": "docker compose logs -f"
+    "docker:up": "docker compose up -d --build",
+    "docker:down": "docker compose down",
+    "docker:logs": "docker compose logs -f",
+    "infra:up": "docker compose up -d postgres keycloak",
+    "infra:down": "docker compose stop keycloak postgres",
+    "infra:logs": "docker compose logs -f postgres keycloak"
   },
   "devDependencies": {
     "concurrently": "10.0.5",

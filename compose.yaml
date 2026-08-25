@@ -41,6 +41,79 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+    networks:
+      default:
+        aliases:
+          - keycloak.localhost
+    restart: unless-stopped
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    environment:
+      API_PORT: '3001'
+      CORS_ORIGIN: http://localhost:3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-hizmet}:${POSTGRES_PASSWORD:-hizmet_dev_password}@postgres:5432/${POSTGRES_DB:-hizmet}
+      KEYCLOAK_ISSUER: http://keycloak.localhost:8080/realms/hizmet
+      KEYCLOAK_AUDIENCE: ${KEYCLOAK_AUDIENCE:-portal-api}
+      KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-portal-admin-service}
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-hizmet-local-admin-service-secret}
+      KEYCLOAK_PORTAL_API_CLIENT_UUID: ${KEYCLOAK_PORTAL_API_CLIENT_UUID:-844594e4-a183-46a3-80a7-97fdb6236d20}
+    ports:
+      - '127.0.0.1:3001:3001'
+    depends_on:
+      postgres:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3001/api/v1/health').then((response) => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
+    restart: unless-stopped
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    environment:
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set in .env}
+      AUTH_TRUST_HOST: 'true'
+      AUTH_URL: http://localhost:3000
+      AUTH_KEYCLOAK_ID: ${AUTH_KEYCLOAK_ID:-portal-web}
+      AUTH_KEYCLOAK_SECRET: ${KEYCLOAK_WEB_CLIENT_SECRET:-hizmet-local-web-secret}
+      AUTH_KEYCLOAK_ISSUER: http://keycloak.localhost:8080/realms/hizmet
+      API_BASE_URL: http://api:3001/api/v1
+      HOSTNAME: 0.0.0.0
+      PORT: '3000'
+    ports:
+      - '127.0.0.1:3000:3000'
+    depends_on:
+      api:
+        condition: service_healthy
+      keycloak:
+        condition: service_started
+    healthcheck:
+      test:
+        [
+          'CMD',
+          'node',
+          '-e',
+          "fetch('http://127.0.0.1:3000/login').then((response) => { if (!response.ok) process.exit(1) }).catch(() => process.exit(1))",
+        ]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+      start_period: 10s
     restart: unless-stopped
 
 volumes:

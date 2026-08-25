@@ -1,0 +1,39 @@
+FROM node:24-alpine AS dependencies
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+RUN npm ci
+
+FROM dependencies AS builder
+
+COPY apps/api apps/api
+RUN npm run build --workspace @hizmet/api
+
+FROM node:24-alpine AS runner
+
+ENV NODE_ENV=production
+
+WORKDIR /app
+
+COPY package.json package-lock.json ./
+COPY apps/api/package.json apps/api/package.json
+COPY apps/web/package.json apps/web/package.json
+RUN npm ci --omit=dev --workspace @hizmet/api --include-workspace-root=false \
+  && npm cache clean --force
+
+COPY --from=builder /app/apps/api/dist apps/api/dist
+COPY apps/api/migrations apps/api/migrations
+COPY apps/api/docker-entrypoint.sh apps/api/docker-entrypoint.sh
+
+RUN chmod +x apps/api/docker-entrypoint.sh \
+  && chown -R node:node apps/api
+
+USER node
+WORKDIR /app/apps/api
+
+EXPOSE 3001
+
+ENTRYPOINT ["./docker-entrypoint.sh"]

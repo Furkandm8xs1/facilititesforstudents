@@ -1,0 +1,14 @@
+.git
+.gitignore
+.backups
+.data
+.DS_Store
+.env
+.env.*
+**/.next
+**/dist
+**/node_modules
+coverage
+node_modules
+*.log
+*.tsbuildinfo

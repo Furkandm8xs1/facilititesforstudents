@@ -13,45 +13,62 @@ başlayın.
 - PostgreSQL
 - Keycloak
 
-## Yerel geliştirme
+## Docker ile çalıştırma
 
 Gereksinimler:
 
-- Node.js 24
-- npm 11
 - Docker ve Docker Compose
 
-Ortam dosyalarını hazırlayın ve bağımlılıkları kurun:
+Kök ortam dosyasını hazırlayın:
 
 ```bash
 cp .env.example .env
-cp apps/api/.env.example apps/api/.env.local
-cp apps/web/.env.example apps/web/.env.local
-npm install
 ```
 
-`apps/web/.env.local` içindeki `AUTH_SECRET` değerini uzun ve rastgele bir
-değerle değiştirin. Örnek parolalar ve istemci gizlisi yalnızca yerel geliştirme
-içindir.
+`.env` içindeki `AUTH_SECRET` değerini uzun ve rastgele bir değerle değiştirin.
+Örnek parolalar ve istemci gizlisi yalnızca yerel geliştirme içindir.
 
-PostgreSQL ve Keycloak'ı başlatın:
+PostgreSQL, Keycloak, API ve web container'larını oluşturup başlatın:
 
 ```bash
-npm run infra:up
-npm run db:migrate
+npm run docker:up
 ```
 
-Web ve API uygulamalarını birlikte çalıştırın:
+API container'ı başlarken bekleyen veritabanı göçlerini otomatik uygular. Servis
+durumlarını `docker compose ps`, logları ise aşağıdaki komutla izleyebilirsiniz:
 
 ```bash
-npm run dev
+npm run docker:logs
 ```
+
+Container'ları durdurmak için `npm run docker:down` kullanın. Bu komut
+`hizmet_postgres_data` volume'unu ve verileri korur. Verileri de silmek
+istemediğiniz sürece `docker compose down -v` kullanmayın.
 
 Yerel adresler:
 
 - Portal: `http://localhost:3000`
 - API sağlık kontrolü: `http://localhost:3001/api/v1/health`
-- Keycloak: `http://localhost:8080`
+- Keycloak: `http://keycloak.localhost:8080`
+
+## Kaynak kodu host üzerinde geliştirme
+
+Mac üzerinde daha hızlı hot reload için yalnızca PostgreSQL ile Keycloak'ı
+Docker'da, web ve API süreçlerini host üzerinde çalıştırabilirsiniz. Bunun için
+Node.js 24 ve npm 11 gerekir:
+
+```bash
+cp apps/api/.env.example apps/api/.env.local
+cp apps/web/.env.example apps/web/.env.local
+npm install
+npm run infra:up
+npm run db:migrate
+npm run dev
+```
+
+Bu modda Keycloak adresi `http://localhost:8080` olarak kalır. Docker ile çalışan
+web ve API container'larını önce `npm run docker:down` ile durdurun; aksi halde
+3000 ve 3001 portları çakışır.
 
 Portal giriş bilgilerini Keycloak yönetir. API sağlık kontrolü herkese açıktır;
 diğer API uçları geçerli bir `portal-api` erişim belirteci ister.
