@@ -36,6 +36,19 @@ The session callback exposes:
 - `session.apiAccessToken`: Bearer token used only by server code;
 - `session.authError`: refresh failure indicator displayed by the portal.
 
+## Logout and account switching
+
+Signing out clears both authentication layers:
+
+1. NextAuth invalidates the encrypted application-session cookie.
+2. The `signOut` event sends the stored refresh token to Keycloak's logout
+   endpoint so the browser's SSO session can no longer silently restore the
+   previous user.
+
+The login action also sends `prompt=login` to Keycloak. This deliberately shows
+the credential screen on every new login attempt, including when Keycloak could
+not be reached during the preceding logout, so another account can be selected.
+
 ## Route protection
 
 [`proxy.ts`](./proxy.ts) applies NextAuth to every application route except the
