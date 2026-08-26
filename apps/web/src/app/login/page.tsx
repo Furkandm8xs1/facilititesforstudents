@@ -13,7 +13,7 @@ export default function LoginPage() {
         <form
           action={async () => {
             'use server';
-            await signIn('keycloak', { redirectTo: '/' });
+            await signIn('keycloak', { redirectTo: '/' }, { prompt: 'login' });
           }}
         >
           <button className="primary-action" type="submit">

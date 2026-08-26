@@ -108,6 +108,30 @@ async function refreshAccessToken(token: JWT): Promise<JWT> {
   }
 }
 
+async function endKeycloakSession(refreshToken: unknown): Promise<void> {
+  if (typeof refreshToken !== 'string') {
+    return;
+  }
+
+  const response = await fetch(
+    `${keycloakIssuer}/protocol/openid-connect/logout`,
+    {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        client_id: keycloakClientId,
+        client_secret: keycloakClientSecret,
+        refresh_token: refreshToken,
+      }),
+      cache: 'no-store',
+    },
+  );
+
+  if (!response.ok) {
+    throw new Error(`Keycloak oturumu kapatılamadı: HTTP ${response.status}`);
+  }
+}
+
 const config = {
   providers: [
     Keycloak({
@@ -124,6 +148,20 @@ const config = {
   session: {
     strategy: 'jwt',
     maxAge: 8 * 60 * 60,
+  },
+  events: {
+    async signOut(message) {
+      const token = 'token' in message ? message.token : null;
+
+      try {
+        await endKeycloakSession(token?.refreshToken);
+      } catch (error) {
+        console.error(
+          'Keycloak SSO oturumu kapatılamadı; yerel oturum kapatılmaya devam ediyor.',
+          error instanceof Error ? error.message : undefined,
+        );
+      }
+    },
   },
   callbacks: {
     async jwt({ token, account }) {
