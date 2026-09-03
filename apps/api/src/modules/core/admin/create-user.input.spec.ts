@@ -34,7 +34,7 @@ describe('parseCreateUserInput', () => {
     ).toThrow(BadRequestException);
   });
 
-  it('accepts kitchen and laundry roles', () => {
+  it('accepts kitchen, laundry, and Tea & Cafe roles', () => {
     const input = parseCreateUserInput({
       firstName: 'Ayşe',
       lastName: 'Yılmaz',
@@ -45,6 +45,7 @@ describe('parseCreateUserInput', () => {
         'kitchen_manager',
         'laundry_operator',
         'laundry_manager',
+        'tea_cafe_attendant',
       ],
     });
 
@@ -53,6 +54,7 @@ describe('parseCreateUserInput', () => {
       'kitchen_manager',
       'laundry_operator',
       'laundry_manager',
+      'tea_cafe_attendant',
     ]);
   });
 });

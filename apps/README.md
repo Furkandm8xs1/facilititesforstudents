@@ -53,6 +53,7 @@ and one Keycloak identity server.
 - [User and profile module](./api/src/modules/core/README.md)
 - [Wallet module](./api/src/modules/wallet/README.md)
 - [Canteen module](./api/src/modules/canteen/README.md)
+- [Tea & Cafe module](./api/src/modules/tea-cafe/README.md)
 - [Database migrations](./api/migrations/README.md)
 - [Web overview](./web/README.md)
 - [Web source layout](./web/src/README.md)
