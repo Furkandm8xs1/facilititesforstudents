@@ -17,6 +17,7 @@ This directory contains the Next.js App Router tree.
 - [`admin/`](./admin/README.md): administrator user creation.
 - [`wallet/`](./wallet/README.md): balance history and cash operations.
 - [`canteen/`](./canteen/README.md): customer ordering and staff operations.
+- [`tea-cafe/`](./tea-cafe/): live brew tracking and attendant operations.
 
 ## Page implementation pattern
 

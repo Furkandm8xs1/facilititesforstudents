@@ -15,6 +15,7 @@ const applicationRoles = new Set([
   'kitchen_operator',
   'laundry_manager',
   'laundry_operator',
+  'tea_cafe_attendant',
   'wallet_cashier',
 ]);
 

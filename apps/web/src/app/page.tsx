@@ -27,6 +27,13 @@ const services = [
     active: false,
     href: null,
   },
+  {
+    title: 'Tea & Cafe',
+    description: 'Çay ve kahvenin demlenme durumunu canlı olarak takip et.',
+    status: 'Demlemeleri gör',
+    active: true,
+    href: '/tea-cafe',
+  },
 ] as const;
 
 export default async function Home() {
@@ -74,6 +81,11 @@ export default async function Home() {
           ) ? (
             <Link className="text-action" href="/canteen/manage">
               Kantin yönetimi
+            </Link>
+          ) : null}
+          {session.user.roles.includes('tea_cafe_attendant') ? (
+            <Link className="text-action" href="/tea-cafe/manage">
+              Tea & Cafe yönetimi
             </Link>
           ) : null}
           <form
