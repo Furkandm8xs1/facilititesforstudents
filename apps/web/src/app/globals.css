@@ -325,11 +325,64 @@ h2 {
 }
 
 .admin-form > label,
-.form-grid > label {
+.form-grid > label,
+.phone-field {
   display: grid;
   gap: 9px;
   font-size: 0.86rem;
   font-weight: 750;
+}
+
+.phone-input-group {
+  display: grid;
+  grid-template-columns: minmax(180px, 230px) minmax(0, 1fr);
+  overflow: hidden;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  transition:
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.phone-input-group:focus-within {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(29 107 79 / 12%);
+}
+
+.phone-country-select {
+  min-width: 0;
+  padding: 14px 36px 14px 14px;
+  color: var(--foreground);
+  background: var(--accent-soft);
+  border: 0;
+  border-right: 1px solid var(--border);
+  outline: none;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 650;
+  text-overflow: ellipsis;
+}
+
+.phone-number-input {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+}
+
+.phone-number-input > span {
+  padding-left: 14px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.admin-form .phone-number-input > input[type='tel'] {
+  min-width: 0;
+  padding: 14px 14px 14px 8px;
+  background: transparent;
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .admin-form input[type='tel'],
@@ -350,6 +403,7 @@ h2 {
 }
 
 .admin-form label > small,
+.phone-field > small,
 .field-error {
   min-height: 1em;
   color: #9a3412;
@@ -1803,6 +1857,14 @@ h2 {
 
   .admin-form {
     padding: 24px 18px;
+  }
+
+  .phone-input-group {
+    grid-template-columns: minmax(120px, 0.85fr) minmax(0, 1.15fr);
+  }
+
+  .phone-country-select {
+    padding-right: 26px;
   }
 
   .form-grid,

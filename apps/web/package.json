@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "jose": "^6.2.9",
+    "libphonenumber-js": "^1.13.9",
     "next": "16.3.1",
     "next-auth": "^5.0.0-beta.32",
     "react": "19.2.8",
