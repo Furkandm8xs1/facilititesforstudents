@@ -160,7 +160,9 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
-            placeholder={country === DEFAULT_COUNTRY ? '555 111 22 33' : 'Telefon numarası'}
+            placeholder={
+              country === DEFAULT_COUNTRY ? '555 111 22 33' : 'Telefon numarası'
+            }
             aria-describedby={hintId}
             aria-invalid={error ? 'true' : undefined}
             value={formattedNationalNumber}
