@@ -1,0 +1,63 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+  merge_group:
+    types: [checks_requested]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: quality-gate
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      CI: true
+      AUTH_SECRET: ci-only-placeholder-secret-at-least-32-characters
+      AUTH_KEYCLOAK_ID: portal-web
+      AUTH_KEYCLOAK_SECRET: ci-only-placeholder-client-secret
+      AUTH_KEYCLOAK_ISSUER: http://localhost:8080/realms/hizmet
+      API_BASE_URL: http://localhost:3001/api/v1
+      DATABASE_URL: postgresql://hizmet:hizmet@localhost:5432/hizmet
+      KEYCLOAK_ISSUER: http://localhost:8080/realms/hizmet
+      KEYCLOAK_AUDIENCE: portal-api
+      KEYCLOAK_ADMIN_CLIENT_ID: portal-admin-service
+      KEYCLOAK_ADMIN_CLIENT_SECRET: ci-only-placeholder-admin-secret
+      KEYCLOAK_PORTAL_API_CLIENT_UUID: 844594e4-a183-46a3-80a7-97fdb6236d20
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install exact dependencies
+        run: npm ci
+
+      - name: Check formatting
+        run: npm run format:check
+
+      - name: Lint and type-check
+        run: npm run lint
+
+      - name: Run unit tests
+        run: npm test
+
+      - name: Build production applications
+        run: npm run build

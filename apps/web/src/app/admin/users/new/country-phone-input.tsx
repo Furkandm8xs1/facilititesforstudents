@@ -4,13 +4,17 @@ import {
   AsYouType,
   getCountries,
   getCountryCallingCode,
-  parsePhoneNumberFromString,
   type CountryCode,
 } from 'libphonenumber-js/max';
 import { useEffect, useId, useMemo, useRef, useState } from 'react';
 
-const DEFAULT_COUNTRY: CountryCode = 'TR';
-const MAX_RAW_DIGITS = 16;
+import {
+  DEFAULT_COUNTRY,
+  digitsOnly,
+  isPossibleNationalNumber,
+  parseInternationalNumber,
+  parseNationalNumber,
+} from './phone-number';
 
 const regionNames =
   typeof Intl.DisplayNames === 'function'
@@ -30,21 +34,6 @@ function countryFlag(country: CountryCode): string {
 
 function countryName(country: CountryCode): string {
   return regionNames?.of(country) ?? country;
-}
-
-function digitsOnly(value: string): string {
-  return value.replace(/\D/g, '').slice(0, MAX_RAW_DIGITS);
-}
-
-function parseNationalNumber(nationalNumber: string, country: CountryCode) {
-  if (!nationalNumber) {
-    return undefined;
-  }
-
-  return parsePhoneNumberFromString(nationalNumber, {
-    defaultCountry: country,
-    extract: false,
-  });
 }
 
 interface CountryPhoneInputProps {
@@ -86,12 +75,8 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
   }, []);
 
   function setValidity(value: string, selectedCountry: CountryCode) {
-    const parsed = parseNationalNumber(value, selectedCountry);
-    const isPossibleForCountry =
-      parsed?.country === selectedCountry && parsed.isPossible();
-
     inputRef.current?.setCustomValidity(
-      value && !isPossibleForCountry
+      value && !isPossibleNationalNumber(value, selectedCountry)
         ? 'Geçerli bir telefon numarası girin.'
         : '',
     );
@@ -106,21 +91,15 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
   }
 
   function handlePhoneChange(value: string) {
-    const trimmedValue = value.trim();
+    const internationalNumber = parseInternationalNumber(value);
 
-    if (trimmedValue.startsWith('+')) {
-      const internationalNumber = parsePhoneNumberFromString(trimmedValue, {
-        extract: false,
-      });
-
-      if (internationalNumber?.country) {
-        const nextCountry = internationalNumber.country;
-        const nextNationalNumber = internationalNumber.nationalNumber;
-        setCountry(nextCountry);
-        setNationalNumber(nextNationalNumber);
-        setValidity(nextNationalNumber, nextCountry);
-        return;
-      }
+    if (internationalNumber) {
+      const nextCountry = internationalNumber.country;
+      const nextNationalNumber = internationalNumber.nationalNumber;
+      setCountry(nextCountry);
+      setNationalNumber(nextNationalNumber);
+      setValidity(nextNationalNumber, nextCountry);
+      return;
     }
 
     const nextNationalNumber = digitsOnly(value);
@@ -160,7 +139,9 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
             type="tel"
             inputMode="tel"
             autoComplete="tel-national"
-            placeholder={country === DEFAULT_COUNTRY ? '555 111 22 33' : 'Telefon numarası'}
+            placeholder={
+              country === DEFAULT_COUNTRY ? '555 111 22 33' : 'Telefon numarası'
+            }
             aria-describedby={hintId}
             aria-invalid={error ? 'true' : undefined}
             value={formattedNationalNumber}
