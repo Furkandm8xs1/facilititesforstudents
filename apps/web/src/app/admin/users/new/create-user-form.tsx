@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 
 import { createUserAction, type CreateUserFormState } from './actions';
+import { CountryPhoneInput } from './country-phone-input';
 import { roleOptions } from '../role-options';
 
 const initialCreateUserState: CreateUserFormState = {
@@ -38,20 +39,7 @@ export function CreateUserForm() {
         </label>
       </div>
 
-      <label>
-        <span>Telefon numarası</span>
-        <input
-          name="phoneE164"
-          type="tel"
-          inputMode="tel"
-          placeholder="+905551112233"
-          autoComplete="off"
-          required
-        />
-        <small>
-          {state.errors?.phoneE164 ?? 'Ülke koduyla ve boşluksuz girin.'}
-        </small>
-      </label>
+      <CountryPhoneInput error={state.errors?.phoneE164} />
 
       <label>
         <span>Geçici parola</span>
