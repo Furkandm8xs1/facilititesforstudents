@@ -155,6 +155,7 @@ and troubleshooting commands.
 
 - [Docker learning guide](docs/docker/README.md)
 - [System architecture](docs/architecture.md)
+- [Professional GitHub workflow](docs/github-professional-workflow.md)
 - [Application map](apps/README.md)
 - [API guide](apps/api/README.md)
 - [Web guide](apps/web/README.md)
