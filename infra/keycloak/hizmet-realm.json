@@ -51,6 +51,10 @@
         {
           "name": "laundry_manager",
           "description": "Çamaşırhane ayarlarını ve yönetim işlemlerini yürütür"
+        },
+        {
+          "name": "tea_cafe_attendant",
+          "description": "Tea & Cafe çay ve kahve demleme kayıtlarını yönetir"
         }
       ]
     }

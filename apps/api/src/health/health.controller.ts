@@ -11,7 +11,7 @@ export class HealthController {
       status: 'ok',
       service: 'hizmet-api',
       architecture: 'modular-monolith',
-      modules: ['core', 'wallet', 'canteen'],
+      modules: ['core', 'wallet', 'canteen', 'tea-cafe'],
     } as const;
   }
 }

@@ -20,6 +20,7 @@ same layering convention.
 - [`core/`](./core/README.md) owns application users and PostgreSQL profiles.
 - [`wallet/`](./wallet/README.md) owns balances and the immutable money ledger.
 - [`canteen/`](./canteen/README.md) owns stores, products, stock, and orders.
+- [`tea-cafe/`](./tea-cafe/README.md) owns tea and coffee brew readiness.
 
 The modules may share the same PostgreSQL transaction today, but tables remain
 grouped by PostgreSQL schema and code remains grouped by capability. This keeps

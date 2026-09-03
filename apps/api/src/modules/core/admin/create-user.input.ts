@@ -8,6 +8,7 @@ export const ASSIGNABLE_USER_ROLES = [
   'kitchen_operator',
   'laundry_manager',
   'laundry_operator',
+  'tea_cafe_attendant',
   'wallet_cashier',
 ] as const;
 

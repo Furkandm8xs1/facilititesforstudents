@@ -35,6 +35,11 @@ export const roleOptions = [
     description: 'Çamaşırhane günlük işlemlerini yönetir.',
   },
   {
+    value: 'tea_cafe_attendant',
+    label: 'Çayhane görevlisi',
+    description: 'Çay ve kahve demleme kayıtlarını yönetir.',
+  },
+  {
     value: 'wallet_cashier',
     label: 'Cüzdan kasiyeri',
     description: 'Nakit yükleme ve gerekçeli düzeltme yapar.',

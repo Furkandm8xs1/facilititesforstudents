@@ -119,6 +119,29 @@ export interface CanteenMutationResult {
   errors?: Record<string, string>;
 }
 
+export type TeaCafeBeverageType = 'TEA' | 'COFFEE';
+
+export interface TeaCafeBrew {
+  id: string;
+  beverageType: TeaCafeBeverageType;
+  note: string | null;
+  durationMinutes: number;
+  startedAt: string;
+  readyAt: string;
+  preparedBy: string;
+}
+
+export interface TeaCafeOverview {
+  brews: TeaCafeBrew[];
+  serverTime: string;
+}
+
+export interface TeaCafeMutationResult {
+  ok: boolean;
+  message: string;
+  errors?: Record<string, string>;
+}
+
 export type CanteenOrderStatus =
   | 'PLACED'
   | 'PREPARING'
@@ -566,6 +589,86 @@ async function canteenMutation(
         typeof body.message === 'string'
           ? body.message
           : 'Kantin işlemi tamamlanamadı.',
+      errors: body.errors,
+    };
+  }
+
+  return { ok: true, message: successMessage };
+}
+
+export async function getTeaCafeOverview(
+  accessToken: string,
+): Promise<TeaCafeOverview | null> {
+  const response = await fetch(`${process.env.API_BASE_URL}/tea-cafe/brews`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    console.error(`GET /tea-cafe/brews başarısız: HTTP ${response.status}`);
+    return null;
+  }
+
+  return (await response.json()) as TeaCafeOverview;
+}
+
+export function createTeaCafeBrew(
+  accessToken: string,
+  payload: {
+    beverageType: TeaCafeBeverageType | string;
+    durationMinutes: string;
+    note: string;
+  },
+) {
+  return teaCafeMutation(
+    accessToken,
+    'POST',
+    '/tea-cafe/manage/brews',
+    payload,
+    payload.beverageType === 'TEA'
+      ? 'Çay kaydedildi; 21 dakika sonra hazır olacak.'
+      : 'Kahve demleme kaydı oluşturuldu.',
+  );
+}
+
+export function deleteTeaCafeBrew(accessToken: string, brewId: string) {
+  return teaCafeMutation(
+    accessToken,
+    'DELETE',
+    `/tea-cafe/manage/brews/${encodeURIComponent(brewId)}`,
+    undefined,
+    'Demleme kaydı silindi.',
+  );
+}
+
+async function teaCafeMutation(
+  accessToken: string,
+  method: 'POST' | 'DELETE',
+  path: string,
+  payload: object | undefined,
+  successMessage: string,
+): Promise<TeaCafeMutationResult> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      ...(payload ? { 'Content-Type': 'application/json' } : {}),
+    },
+    body: payload ? JSON.stringify(payload) : undefined,
+    cache: 'no-store',
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string | string[];
+    errors?: Record<string, string>;
+  };
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message:
+        typeof body.message === 'string'
+          ? body.message
+          : 'Tea & Cafe işlemi tamamlanamadı.',
       errors: body.errors,
     };
   }

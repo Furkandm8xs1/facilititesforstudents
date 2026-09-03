@@ -2,7 +2,7 @@
 
 The API is a NestJS application that exposes the business capabilities of the
 portal under `/api/v1`. It is deliberately organized as a modular monolith so
-that `core`, `wallet`, and `canteen` can later be separated without mixing
+that `core`, `wallet`, `canteen`, and `tea-cafe` can later be separated without mixing
 their business rules today.
 
 ## Bootstrap sequence
@@ -18,16 +18,17 @@ their business rules today.
 
 ## Source map
 
-| Path                                                      | Purpose                                                      |
-| --------------------------------------------------------- | ------------------------------------------------------------ |
-| [`src/auth/`](./src/auth/README.md)                       | Keycloak JWT verification and role guards                    |
-| [`src/database/`](./src/database/README.md)               | PostgreSQL pool and transaction helper                       |
-| [`src/health/`](./src/health/)                            | Public health endpoint                                       |
-| [`src/modules/core/`](./src/modules/core/README.md)       | Application profiles and administrator user creation         |
-| [`src/modules/wallet/`](./src/modules/wallet/README.md)   | Shared balance, cash deposits, reversals, and ledger history |
-| [`src/modules/canteen/`](./src/modules/canteen/README.md) | Canteen catalog, stock, orders, refunds, and order status    |
-| [`migrations/`](./migrations/README.md)                   | Ordered PostgreSQL schema evolution                          |
-| [`scripts/`](./scripts/README.md)                         | Operational scripts, currently the migration runner          |
+| Path                                                        | Purpose                                                      |
+| ----------------------------------------------------------- | ------------------------------------------------------------ |
+| [`src/auth/`](./src/auth/README.md)                         | Keycloak JWT verification and role guards                    |
+| [`src/database/`](./src/database/README.md)                 | PostgreSQL pool and transaction helper                       |
+| [`src/health/`](./src/health/)                              | Public health endpoint                                       |
+| [`src/modules/core/`](./src/modules/core/README.md)         | Application profiles and administrator user creation         |
+| [`src/modules/wallet/`](./src/modules/wallet/README.md)     | Shared balance, cash deposits, reversals, and ledger history |
+| [`src/modules/canteen/`](./src/modules/canteen/README.md)   | Canteen catalog, stock, orders, refunds, and order status    |
+| [`src/modules/tea-cafe/`](./src/modules/tea-cafe/README.md) | Tea and coffee readiness plus attendant operations           |
+| [`migrations/`](./migrations/README.md)                     | Ordered PostgreSQL schema evolution                          |
+| [`scripts/`](./scripts/README.md)                           | Operational scripts, currently the migration runner          |
 
 ## Configuration
 
