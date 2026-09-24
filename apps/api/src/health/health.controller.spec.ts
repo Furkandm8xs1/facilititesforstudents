@@ -7,6 +7,12 @@ describe('HealthController', () => {
     const response = new HealthController().getHealth();
 
     expect(response.status).toBe('ok');
-    expect(response.modules).toEqual(['core', 'wallet', 'canteen', 'tea-cafe']);
+    expect(response.modules).toEqual([
+      'core',
+      'wallet',
+      'canteen',
+      'tea-cafe',
+      'laundry',
+    ]);
   });
 });

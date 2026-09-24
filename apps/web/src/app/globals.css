@@ -1781,6 +1781,277 @@ h2 {
   min-width: 180px;
 }
 
+.laundry-shell {
+  width: min(1120px, calc(100% - 40px));
+  margin: 0 auto;
+  padding: 56px 0 96px;
+}
+
+.laundry-nav {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.laundry-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 300px;
+  gap: 48px;
+  align-items: end;
+  padding-bottom: 56px;
+  border-bottom: 1px solid var(--border);
+}
+
+.laundry-header h1,
+.laundry-management-header h1 {
+  font-size: clamp(3rem, 8vw, 6rem);
+}
+
+.laundry-state-card {
+  display: flex;
+  min-height: 190px;
+  padding: 28px;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #f5fbff;
+  background: #28556a;
+  border-radius: 28px;
+  box-shadow: 0 24px 50px rgb(40 85 106 / 18%);
+}
+
+.laundry-state-card span,
+.laundry-state-card small {
+  opacity: 0.76;
+}
+
+.laundry-state-card strong {
+  font-size: 1.8rem;
+  letter-spacing: -0.035em;
+}
+
+.laundry-load-list,
+.laundry-operation-list {
+  display: grid;
+  gap: 16px;
+}
+
+.laundry-load-card {
+  padding: 24px;
+  background: rgb(255 253 248 / 86%);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  box-shadow: 0 18px 44px rgb(54 69 60 / 7%);
+}
+
+.laundry-load-card > header,
+.laundry-run,
+.laundry-operation-form > header {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  justify-content: space-between;
+}
+
+.laundry-load-card > header > div,
+.laundry-operation-form > header > div {
+  display: grid;
+  gap: 7px;
+}
+
+.laundry-load-card time,
+.laundry-load-card small,
+.laundry-operation-form small {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+
+.laundry-state {
+  width: fit-content;
+  padding: 6px 9px;
+  color: #713f12;
+  background: #fef3c7;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.laundry-state-COMPLETED,
+.laundry-state-REFUNDED {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.laundry-run-list {
+  display: grid;
+  gap: 12px;
+  padding-top: 18px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.laundry-run > div {
+  display: grid;
+  gap: 5px;
+}
+
+.laundry-run > div:last-child {
+  justify-items: end;
+}
+
+.laundry-run span {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+
+.laundry-management-header {
+  padding-bottom: 48px;
+  border-bottom: 1px solid var(--border);
+}
+
+.laundry-tariff-section,
+.laundry-search-heading {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(420px, 1.25fr);
+  gap: 48px;
+  align-items: center;
+  padding: 48px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.laundry-tariff-section > div > p:last-child {
+  margin-top: 14px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.laundry-tariff-form,
+.laundry-operation-form {
+  display: grid;
+  gap: 18px;
+  padding: 26px;
+  background: rgb(255 253 248 / 88%);
+  border: 1px solid #aec8d2;
+  border-radius: 22px;
+  box-shadow: 0 18px 44px rgb(40 85 106 / 8%);
+}
+
+.laundry-tariff-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.laundry-tariff-form label,
+.laundry-operation-form label,
+.laundry-transfer-form label,
+.laundry-refund-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 0.82rem;
+  font-weight: 750;
+}
+
+.laundry-tariff-form input,
+.laundry-operation-form select,
+.laundry-transfer-form select,
+.laundry-refund-form input {
+  width: 100%;
+  padding: 13px 14px;
+  color: var(--foreground);
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 11px;
+  outline: none;
+}
+
+.laundry-tariff-form .amount-input input {
+  border: 0;
+}
+
+.laundry-form-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.laundry-form-footer {
+  display: flex;
+  grid-column: 1 / -1;
+  gap: 18px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.laundry-form-footer .primary-action,
+.laundry-transfer-form .primary-action {
+  width: fit-content;
+}
+
+.laundry-customer-results {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+  margin: 24px 0;
+}
+
+.laundry-customer-results button {
+  display: grid;
+  gap: 6px;
+  padding: 16px 18px;
+  color: var(--foreground);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.laundry-customer-results button.laundry-customer-selected {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgb(29 107 79 / 12%);
+}
+
+.laundry-customer-results span {
+  color: var(--muted);
+  font-size: 0.78rem;
+}
+
+.laundry-operation-card {
+  overflow: hidden;
+  background: rgb(255 253 248 / 72%);
+  border: 1px solid var(--border);
+  border-radius: 24px;
+}
+
+.laundry-operation-card > .laundry-load-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.laundry-operation-actions {
+  display: grid;
+  grid-template-columns: 0.65fr 1.6fr 1fr;
+  gap: 16px;
+  padding: 20px 24px 24px;
+  background: #eef3f3;
+  border-top: 1px solid var(--border);
+}
+
+.laundry-operation-actions form {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+}
+
+.laundry-transfer-form {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.laundry-transfer-form .primary-action,
+.laundry-transfer-form .form-message {
+  grid-column: 1 / -1;
+}
+
 @media (max-width: 1020px) {
   .service-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -1799,7 +2070,11 @@ h2 {
   .ordering-control,
   .users-admin-header,
   .tea-cafe-header,
-  .brew-create-section {
+  .brew-create-section,
+  .laundry-header,
+  .laundry-tariff-section,
+  .laundry-search-heading,
+  .laundry-operation-actions {
     grid-template-columns: 1fr;
   }
 
@@ -1916,6 +2191,11 @@ h2 {
     padding-top: 32px;
   }
 
+  .laundry-shell {
+    width: min(100% - 28px, 1120px);
+    padding-top: 32px;
+  }
+
   .search-form {
     grid-template-columns: 1fr;
   }
@@ -1951,7 +2231,9 @@ h2 {
 
   .product-create-form,
   .product-editor,
-  .brew-create-form {
+  .brew-create-form,
+  .laundry-tariff-form,
+  .laundry-operation-form {
     padding: 22px 16px;
   }
 
@@ -1975,6 +2257,34 @@ h2 {
   .brew-form-footer .primary-action,
   .brew-card-footer .danger-action {
     width: 100%;
+  }
+
+  .laundry-tariff-form,
+  .laundry-form-grid,
+  .laundry-customer-results,
+  .laundry-transfer-form {
+    grid-template-columns: 1fr;
+  }
+
+  .laundry-form-footer,
+  .laundry-load-card > header,
+  .laundry-run,
+  .laundry-operation-form > header {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .laundry-form-footer .primary-action {
+    width: 100%;
+  }
+
+  .laundry-run > div:last-child {
+    justify-items: start;
+  }
+
+  .laundry-transfer-form .primary-action,
+  .laundry-transfer-form .form-message {
+    grid-column: 1;
   }
 
   .product-form-footer .primary-action {

@@ -6,6 +6,7 @@ import { DatabaseModule } from './database/database.module';
 import { HealthController } from './health/health.controller';
 import { CanteenModule } from './modules/canteen/canteen.module';
 import { CoreModule } from './modules/core/core.module';
+import { LaundryModule } from './modules/laundry/laundry.module';
 import { TeaCafeModule } from './modules/tea-cafe/tea-cafe.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 
@@ -21,6 +22,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     WalletModule,
     CanteenModule,
     TeaCafeModule,
+    LaundryModule,
   ],
   controllers: [HealthController],
 })

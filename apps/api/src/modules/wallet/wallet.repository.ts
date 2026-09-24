@@ -77,7 +77,21 @@ interface ExistingEntryRow {
   account_id: string;
   entry_type: WalletEntryView['entryType'];
   available_delta_minor: string;
+  held_delta_minor: string;
+  service_code: string | null;
+  reference_id: string | null;
   reversal_of_entry_id: string | null;
+}
+
+export interface ServiceChargeResult {
+  holdEntryId: string;
+  captureEntryId: string;
+  duplicate: boolean;
+}
+
+export interface ServiceRefundResult {
+  entryId: string;
+  duplicate: boolean;
 }
 
 interface ReversibleDepositRow extends AccountRow {
@@ -341,6 +355,188 @@ export class WalletRepository {
     });
   }
 
+  async chargeServiceInTransaction(
+    client: PoolClient,
+    input: {
+      actorSubject: string;
+      userProfileId: string;
+      amountMinor: bigint;
+      serviceCode: string;
+      referenceId: string;
+      idempotencyKey: string;
+    },
+  ): Promise<ServiceChargeResult> {
+    const actor = await this.findActor(client, input.actorSubject);
+    const account = await this.lockAccountByProfileId(
+      client,
+      input.userProfileId,
+    );
+
+    if (!account || account.status !== 'ACTIVE') {
+      throw new WalletRuleError('TARGET_NOT_ACTIVE');
+    }
+
+    const holdKey = `service:${input.serviceCode}:hold:${input.idempotencyKey}`;
+    const captureKey = `service:${input.serviceCode}:capture:${input.idempotencyKey}`;
+    const existingHold = await this.findEntryByIdempotencyKey(client, holdKey);
+    const existingCapture = await this.findEntryByIdempotencyKey(
+      client,
+      captureKey,
+    );
+
+    if (existingHold || existingCapture) {
+      if (
+        !existingHold ||
+        !existingCapture ||
+        existingHold.account_id !== account.account_id ||
+        existingCapture.account_id !== account.account_id ||
+        existingHold.entry_type !== 'HOLD' ||
+        existingCapture.entry_type !== 'CAPTURE' ||
+        BigInt(existingHold.available_delta_minor) !== -input.amountMinor ||
+        BigInt(existingHold.held_delta_minor) !== input.amountMinor ||
+        BigInt(existingCapture.held_delta_minor) !== -input.amountMinor ||
+        existingHold.service_code !== input.serviceCode ||
+        existingCapture.service_code !== input.serviceCode ||
+        existingHold.reference_id !== input.referenceId ||
+        existingCapture.reference_id !== input.referenceId
+      ) {
+        throw new WalletRuleError('IDEMPOTENCY_CONFLICT');
+      }
+
+      return {
+        holdEntryId: existingHold.id,
+        captureEntryId: existingCapture.id,
+        duplicate: true,
+      };
+    }
+
+    if (BigInt(account.available_minor) < input.amountMinor) {
+      throw new WalletRuleError('INSUFFICIENT_AVAILABLE');
+    }
+
+    const hold = await client.query<{ id: string }>(
+      `INSERT INTO wallet.ledger_entry (
+        account_id, entry_type, available_delta_minor, held_delta_minor,
+        idempotency_key, actor_user_profile_id, service_code, reference_id
+      ) VALUES ($1, 'HOLD', $2, $3, $4, $5, $6, $7)
+      RETURNING id`,
+      [
+        account.account_id,
+        (-input.amountMinor).toString(),
+        input.amountMinor.toString(),
+        holdKey,
+        actor.id,
+        input.serviceCode,
+        input.referenceId,
+      ],
+    );
+
+    await client.query(
+      `UPDATE wallet.account
+      SET available_minor = available_minor - $2,
+          held_minor = held_minor + $2,
+          updated_at = now()
+      WHERE id = $1`,
+      [account.account_id, input.amountMinor.toString()],
+    );
+
+    const capture = await client.query<{ id: string }>(
+      `INSERT INTO wallet.ledger_entry (
+        account_id, entry_type, available_delta_minor, held_delta_minor,
+        idempotency_key, actor_user_profile_id, service_code, reference_id
+      ) VALUES ($1, 'CAPTURE', 0, $2, $3, $4, $5, $6)
+      RETURNING id`,
+      [
+        account.account_id,
+        (-input.amountMinor).toString(),
+        captureKey,
+        actor.id,
+        input.serviceCode,
+        input.referenceId,
+      ],
+    );
+
+    await client.query(
+      `UPDATE wallet.account
+      SET held_minor = held_minor - $2,
+          updated_at = now()
+      WHERE id = $1`,
+      [account.account_id, input.amountMinor.toString()],
+    );
+
+    return {
+      holdEntryId: hold.rows[0].id,
+      captureEntryId: capture.rows[0].id,
+      duplicate: false,
+    };
+  }
+
+  async refundServiceInTransaction(
+    client: PoolClient,
+    input: {
+      actorSubject: string;
+      userProfileId: string;
+      amountMinor: bigint;
+      serviceCode: string;
+      referenceId: string;
+      reason: string;
+      idempotencyKey: string;
+    },
+  ): Promise<ServiceRefundResult> {
+    const actor = await this.findActor(client, input.actorSubject);
+    const account = await this.lockAccountByProfileId(
+      client,
+      input.userProfileId,
+    );
+
+    if (!account) {
+      throw new WalletRuleError('TARGET_NOT_FOUND');
+    }
+
+    const ledgerKey = `service:${input.serviceCode}:refund:${input.idempotencyKey}`;
+    const existing = await this.findEntryByIdempotencyKey(client, ledgerKey);
+
+    if (existing) {
+      if (
+        existing.account_id !== account.account_id ||
+        existing.entry_type !== 'SERVICE_REFUND' ||
+        BigInt(existing.available_delta_minor) !== input.amountMinor ||
+        existing.service_code !== input.serviceCode ||
+        existing.reference_id !== input.referenceId
+      ) {
+        throw new WalletRuleError('IDEMPOTENCY_CONFLICT');
+      }
+      return { entryId: existing.id, duplicate: true };
+    }
+
+    const inserted = await client.query<{ id: string }>(
+      `INSERT INTO wallet.ledger_entry (
+        account_id, entry_type, available_delta_minor, idempotency_key,
+        actor_user_profile_id, service_code, reference_id, reason
+      ) VALUES ($1, 'SERVICE_REFUND', $2, $3, $4, $5, $6, $7)
+      RETURNING id`,
+      [
+        account.account_id,
+        input.amountMinor.toString(),
+        ledgerKey,
+        actor.id,
+        input.serviceCode,
+        input.referenceId,
+        input.reason,
+      ],
+    );
+
+    await client.query(
+      `UPDATE wallet.account
+      SET available_minor = available_minor + $2,
+          updated_at = now()
+      WHERE id = $1`,
+      [account.account_id, input.amountMinor.toString()],
+    );
+
+    return { entryId: inserted.rows[0].id, duplicate: false };
+  }
+
   private async findActor(client: PoolClient, subject: string) {
     const result = await client.query<ProfileRow>(
       `SELECT id
@@ -365,6 +561,20 @@ export class WalletRepository {
       WHERE profile.phone_e164 = $1
       FOR UPDATE OF account`,
       [phoneE164],
+    );
+
+    return result.rows[0] ?? null;
+  }
+
+  private async lockAccountByProfileId(
+    client: PoolClient,
+    userProfileId: string,
+  ): Promise<AccountRow | null> {
+    const result = await client.query<AccountRow>(
+      `${this.accountSelect()}
+      WHERE profile.id = $1
+      FOR UPDATE OF account`,
+      [userProfileId],
     );
 
     return result.rows[0] ?? null;
@@ -412,6 +622,9 @@ export class WalletRepository {
         account_id,
         entry_type,
         available_delta_minor::text,
+        held_delta_minor::text,
+        service_code,
+        reference_id,
         reversal_of_entry_id
       FROM wallet.ledger_entry
       WHERE idempotency_key = $1`,

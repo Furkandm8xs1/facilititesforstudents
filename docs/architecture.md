@@ -6,15 +6,16 @@
 
 ## 1. Amaç
 
-Yurt sakinlerinin ve yetkili görevlilerin tek bir arayüzden yurt hizmetlerine erişmesini sağlayan bir portal geliştirilecektir. Kullanıcı bir kez giriş yapacak; yetkisine göre kantin, ileride laundry ve kitchen gibi modülleri aynı portal içinde kullanacaktır.
+Yurt sakinlerinin ve yetkili görevlilerin tek bir arayüzden yurt hizmetlerine erişmesini sağlayan bir portal geliştirilecektir. Kullanıcı bir kez giriş yapacak; yetkisine göre kantin, laundry ve ileride kitchen gibi modülleri aynı portal içinde kullanacaktır.
 
 İlk sürümde yalnızca şu alanlar çalışır olacaktır:
 
 - Merkezi kullanıcı girişi ve rol yönetimi
 - Bütün hizmetlerin kullanacağı ortak cüzdan/bakiye sistemi
 - Kullanıcı ve görevli taraflarıyla kantin sistemi
+- Kullanıcı ve görevli taraflarıyla laundry sistemi
 
-Laundry ve kitchen portalda gelecekte eklenecek hizmetler olarak düşünülecek, ancak işlevleri ilk sürümde geliştirilmeyecektir.
+Kitchen portalda gelecekte eklenecek hizmet olarak düşünülecektir.
 
 ## 2. Temel mimari kararlar
 
@@ -41,15 +42,16 @@ flowchart TB
         PROFILE["Profil ve Servis Atamaları"]
         WALLET["Wallet / Ledger<br/>Bakiye • Bloke • Tahsilat • Düzeltme"]
         CANTEEN["Kantin<br/>Ürün • Stok • Sepet • Sipariş"]
-        LAUNDRY["Laundry<br/>(sonraki aşama)"]
+        LAUNDRY["Laundry<br/>Makine • Durum • Tahsilat"]
         KITCHEN["Kitchen<br/>(sonraki aşama)"]
         AUDIT["Audit / Raporlama / Outbox"]
 
         API --> PROFILE
         API --> CANTEEN
         API --> WALLET
+        API --> LAUNDRY
         CANTEEN -->|"reserve / capture / release"| WALLET
-        LAUNDRY -.->|"ortak cüzdan"| WALLET
+        LAUNDRY -->|"capture / refund"| WALLET
         KITCHEN -.->|"ortak cüzdan"| WALLET
         PROFILE --> AUDIT
         CANTEEN --> AUDIT
@@ -61,16 +63,17 @@ flowchart TB
         COREDB[("core")]
         WALLETDB[("wallet")]
         CANTEENDB[("canteen")]
+        LAUNDRYDB[("laundry")]
         AUDITDB[("audit / outbox")]
-        FUTUREDB[("laundry / kitchen")]
+        FUTUREDB[("kitchen")]
     end
 
     KC --> KCDB
     PROFILE --> COREDB
     WALLET --> WALLETDB
     CANTEEN --> CANTEENDB
+    LAUNDRY --> LAUNDRYDB
     AUDIT --> AUDITDB
-    LAUNDRY -.-> FUTUREDB
     KITCHEN -.-> FUTUREDB
 ```
 
@@ -121,8 +124,8 @@ Bir kişinin öğrenci veya yönetici olması, kantin göreviyle aynı kavram de
 | `canteen_manager`  | Operatör yetkilerine ek olarak ürün oluşturur ve fiyat değiştirir.                               |
 | `kitchen_operator` | Mutfak modülü devreye alındığında günlük mutfak işlemlerini yönetir.                             |
 | `kitchen_manager`  | Mutfak modülü devreye alındığında ayarları ve yönetim işlemlerini yürütür.                       |
-| `laundry_operator` | Çamaşırhane modülü devreye alındığında günlük operasyonları yönetir.                             |
-| `laundry_manager`  | Çamaşırhane modülü devreye alındığında ayarları ve yönetim işlemlerini yürütür.                  |
+| `laundry_operator` | Çamaşırhane makine ve kıyafet operasyonlarını yönetir.                                           |
+| `laundry_manager`  | Çamaşırhane operasyonlarının yanında fiyat ayarlarını yönetir.                                   |
 | `wallet_cashier`   | Nakit karşılığı bakiye yükler ve hatalı para işlemleri için ters kayıt oluşturur.                |
 
 Keycloak'ın teknik yönetici rolleri işletme rollerinden ayrı tutulacaktır. Uygulama yöneticilerine gereksiz Keycloak yönetim yetkileri verilmeyecektir.
@@ -267,6 +270,7 @@ stateDiagram-v2
 | `core`     | Profil modülü   | Uygulama kullanıcı profili, Keycloak subject bağlantısı, hesap durumu, servis ataması |
 | `wallet`   | Wallet modülü   | Cüzdan hesabı, ledger işlemi, ledger satırı, bloke, ters işlem                        |
 | `canteen`  | Kantin modülü   | Kantin, ürün, stok rezervasyonu, sipariş, sipariş kalemi, durum geçmişi               |
+| `laundry`  | Laundry modülü  | Tarife, kıyafet yükü, makine kullanımı ve durum geçmişi                               |
 | `audit`    | Audit altyapısı | Yönetim işlemleri ve ileride dış olaylara dönüşebilecek outbox kayıtları              |
 
 Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır. Kantin modülü Wallet tablolarına doğrudan yazmayacak; Wallet'ın uygulama arayüzünü çağıracaktır.
@@ -291,7 +295,7 @@ Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır.
 - Odaya teslimat
 - Otomatik kantin çalışma saatleri
 - Günlük menü için ayrı kategori veya zamanlama
-- Laundry ve kitchen işlevleri
+- Kitchen işlevleri
 - Ayrı mikroservisler ve mesaj kuyruğu
 - İnternete açık yayın, HTTPS ve yerel DNS
 
@@ -305,8 +309,9 @@ Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır.
 6. **Sipariş akışı** — Sepet, sipariş durumları ile Wallet ve stok entegrasyonu.
 7. **Kullanıcı arayüzleri** — Portal, ürünler, sepet, sipariş takibi ve cüzdan ekranları.
 8. **Görevli/yönetici arayüzleri** — Sipariş kuyruğu, katalog/stok, kullanıcı/rol ve nakit yönetimi.
-9. **Güvenilirlik** — Yetki testleri, eş zamanlı sipariş testleri, idempotency, audit ve hata senaryoları.
-10. **Yerel ağ teslimi** — Yurt sunucusu için çalıştırma, yedekleme ve geri yükleme yönergeleri.
+9. **Laundry** — Sabit makine envanteri, operatör kontrollü yıkama/kurutma, anlık tahsilat, durum takibi ve iade.
+10. **Güvenilirlik** — Yetki testleri, eş zamanlı sipariş testleri, idempotency, audit ve hata senaryoları.
+11. **Yerel ağ teslimi** — Yurt sunucusu için çalıştırma, yedekleme ve geri yükleme yönergeleri.
 
 ## 15. İlk sürüm başarı ölçütleri
 
@@ -318,5 +323,6 @@ Modüller arası bağlantılarda değişmeyen UUID değerleri kullanılacaktır.
 - Eş zamanlı siparişler bakiyeyi veya stoğu negatife düşüremez.
 - Kantin görevlisi siparişi hazırlayabilir, hazır ve teslim edildi durumuna getirebilir.
 - İptal durumlarında bakiye ve stok doğru şekilde iade edilir.
+- Laundry görevlisi öğrenciyi makineye aldığında ücret atomik tahsil edilir; kullanıcı makine ve çıkış durumunu görebilir.
 - Fiyat değişiklikleri geçmiş siparişlerin tutarını değiştirmez.
 - Para, fiyat, stok ve sipariş durumu değişiklikleri denetlenebilir şekilde kaydedilir.

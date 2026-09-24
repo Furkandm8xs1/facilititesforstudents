@@ -6,13 +6,16 @@ in `public.schema_migration`.
 
 ## Migration history
 
-| File                                                                   | Main changes                                                                                                                                              |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| [`001_core.sql`](./001_core.sql)                                       | Enables `pgcrypto`; creates `core`, `wallet`, `canteen`, and `audit` schemas; creates user profiles and service units; seeds `canteen-main`               |
-| [`002_wallet.sql`](./002_wallet.sql)                                   | Creates wallet accounts and immutable ledger entries; adds indexes; creates a wallet automatically for every profile                                      |
-| [`003_canteen_catalog.sql`](./003_canteen_catalog.sql)                 | Creates canteen stores, products, product events, catalog constraints, and product-event immutability                                                     |
-| [`004_canteen_orders.sql`](./004_canteen_orders.sql)                   | Introduces orders, immutable price/name snapshots, events, initial workflow fields, and order indexes                                                     |
-| [`005_simplify_canteen_orders.sql`](./005_simplify_canteen_orders.sql) | Converts pending orders to immediate capture, removes acceptance/rejection states, drops the delivery code, and installs the simplified status constraint |
+| File                                                                       | Main changes                                                                                                                                              |
+| -------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`001_core.sql`](./001_core.sql)                                           | Enables `pgcrypto`; creates `core`, `wallet`, `canteen`, and `audit` schemas; creates user profiles and service units; seeds `canteen-main`               |
+| [`002_wallet.sql`](./002_wallet.sql)                                       | Creates wallet accounts and immutable ledger entries; adds indexes; creates a wallet automatically for every profile                                      |
+| [`003_canteen_catalog.sql`](./003_canteen_catalog.sql)                     | Creates canteen stores, products, product events, catalog constraints, and product-event immutability                                                     |
+| [`004_canteen_orders.sql`](./004_canteen_orders.sql)                       | Introduces orders, immutable price/name snapshots, events, initial workflow fields, and order indexes                                                     |
+| [`005_simplify_canteen_orders.sql`](./005_simplify_canteen_orders.sql)     | Converts pending orders to immediate capture, removes acceptance/rejection states, drops the delivery code, and installs the simplified status constraint |
+| [`006_tea_cafe.sql`](./006_tea_cafe.sql)                                   | Adds the Tea & Cafe service unit and timed brew records                                                                                                   |
+| [`007_laundry.sql`](./007_laundry.sql)                                     | Adds fixed-machine laundry tariffs, loads, price-snapshotted runs, immutable events, occupancy constraints, and idempotency                               |
+| [`008_laundry_run_history_guard.sql`](./008_laundry_run_history_guard.sql) | Restricts machine-run updates to the one-way in-machine to removed transition                                                                             |
 
 The fourth migration describes the original order design. The fifth migration
 is intentionally separate because migration history must show how an existing
