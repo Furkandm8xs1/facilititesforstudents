@@ -6,6 +6,7 @@ import { WalletRuleError } from '../wallet/wallet.errors';
 import { WalletRepository } from '../wallet/wallet.repository';
 import {
   LAUNDRY_MACHINES,
+  LAUNDRY_RUN_DURATION_SECONDS,
   LAUNDRY_SERVICE_CODE,
   machineCode,
   type LaundryMachineType,
@@ -42,6 +43,9 @@ interface RunRow extends QueryResultRow {
   price_minor: string;
   idempotency_key: string;
   started_at: Date;
+  duration_seconds: number;
+  ready_at: Date;
+  is_ready?: boolean;
   removed_at: Date | null;
 }
 
@@ -77,6 +81,8 @@ export interface RunView {
   status: 'IN_MACHINE' | 'REMOVED';
   priceMinor: string;
   startedAt: string;
+  durationSeconds: number;
+  readyAt: string;
   removedAt: string | null;
 }
 
@@ -101,7 +107,14 @@ export class LaundryRepository {
     if (!service) {
       throw new LaundryRuleError('SERVICE_NOT_FOUND');
     }
-    return this.configView(service, await this.activeMachineMap());
+    const [machines, serverTime] = await Promise.all([
+      this.activeMachineMap(),
+      this.getDatabaseTime(),
+    ]);
+    return {
+      ...this.configView(service, machines),
+      serverTime,
+    };
   }
 
   async getMyLoads(subject: string) {
@@ -113,14 +126,18 @@ export class LaundryRepository {
       throw new LaundryRuleError('CUSTOMER_NOT_FOUND');
     }
 
-    const loads = await this.listLoads(
-      `load.owner_user_profile_id = $1`,
-      [profile.rows[0].id],
-      100,
-    );
+    const [loads, serverTime] = await Promise.all([
+      this.listLoads(
+        `load.owner_user_profile_id = $1`,
+        [profile.rows[0].id],
+        100,
+      ),
+      this.getDatabaseTime(),
+    ]);
     return {
       activeLoads: loads.filter((load) => load.status === 'ACTIVE'),
       history: loads.filter((load) => load.status !== 'ACTIVE'),
+      serverTime,
     };
   }
 
@@ -129,17 +146,20 @@ export class LaundryRepository {
     if (!service) {
       throw new LaundryRuleError('SERVICE_NOT_FOUND');
     }
-    const [machineMap, activeLoads, recentLoads] = await Promise.all([
-      this.activeMachineMap(),
-      this.listLoads(`load.status = 'ACTIVE'`, [], 100),
-      this.listLoads(`load.status <> 'ACTIVE'`, [], 100),
-    ]);
+    const [machineMap, activeLoads, recentLoads, serverTime] =
+      await Promise.all([
+        this.activeMachineMap(),
+        this.listLoads(`load.status = 'ACTIVE'`, [], 100),
+        this.listLoads(`load.status <> 'ACTIVE'`, [], 100),
+        this.getDatabaseTime(),
+      ]);
     const config = this.configView(service, machineMap);
     return {
       tariffs: config.tariffs,
       machines: config.machines,
       activeLoads,
       recentLoads,
+      serverTime,
     };
   }
 
@@ -317,6 +337,9 @@ export class LaundryRepository {
         ) {
           throw new LaundryRuleError('SAME_MACHINE');
         }
+        if (!activeRun.is_ready) {
+          throw new LaundryRuleError('RUN_NOT_READY');
+        }
 
         await this.removeRun(client, activeRun.id, actor.id);
         await this.recordEvent(
@@ -394,6 +417,7 @@ export class LaundryRepository {
       }
       const run = await this.lockActiveRun(client, input.loadId);
       if (!run) throw new LaundryRuleError('LOAD_STATE_CONFLICT');
+      if (!run.is_ready) throw new LaundryRuleError('RUN_NOT_READY');
       await this.removeRun(client, run.id, actor.id);
       await this.recordEvent(
         client,
@@ -404,7 +428,7 @@ export class LaundryRepository {
       );
       await client.query(
         `UPDATE laundry.load
-        SET status = 'COMPLETED', completed_at = now()
+        SET status = 'COMPLETED', completed_at = clock_timestamp()
         WHERE id = $1`,
         [input.loadId],
       );
@@ -467,7 +491,8 @@ export class LaundryRepository {
       });
       await client.query(
         `UPDATE laundry.load
-        SET status = 'REFUNDED', completed_at = NULL, refunded_at = now(),
+        SET status = 'REFUNDED', completed_at = NULL,
+            refunded_at = clock_timestamp(),
             refund_reason = $2, refund_idempotency_key = $3
         WHERE id = $1`,
         [input.loadId, input.reason, input.idempotencyKey],
@@ -584,7 +609,8 @@ export class LaundryRepository {
 
   private async lockActiveRun(client: PoolClient, loadId: string) {
     const result = await client.query<RunRow>(
-      `SELECT *, price_minor::text FROM laundry.machine_run
+      `SELECT *, price_minor::text, ready_at <= clock_timestamp() AS is_ready
+      FROM laundry.machine_run
       WHERE load_id = $1 AND status = 'IN_MACHINE' FOR UPDATE`,
       [loadId],
     );
@@ -606,8 +632,12 @@ export class LaundryRepository {
       .query<{ id: string }>(
         `INSERT INTO laundry.machine_run (
           load_id, machine_type, machine_number, price_minor,
-          idempotency_key, started_by_user_profile_id
-        ) VALUES ($1, $2, $3, $4, $5, $6)
+          idempotency_key, started_by_user_profile_id, duration_seconds,
+          started_at, ready_at
+        ) VALUES (
+          $1, $2, $3, $4, $5, $6, $7::integer, statement_timestamp(),
+          statement_timestamp() + ($7::integer * interval '1 second')
+        )
         RETURNING id`,
         [
           input.loadId,
@@ -616,6 +646,7 @@ export class LaundryRepository {
           input.priceMinor,
           input.idempotencyKey,
           input.actorId,
+          LAUNDRY_RUN_DURATION_SECONDS,
         ],
       )
       .then((result) => result.rows[0]);
@@ -624,7 +655,7 @@ export class LaundryRepository {
   private removeRun(client: PoolClient, runId: string, actorId: string) {
     return client.query(
       `UPDATE laundry.machine_run
-      SET status = 'REMOVED', removed_at = now(),
+      SET status = 'REMOVED', removed_at = clock_timestamp(),
           removed_by_user_profile_id = $2
       WHERE id = $1`,
       [runId, actorId],
@@ -641,8 +672,8 @@ export class LaundryRepository {
   ) {
     return client.query(
       `INSERT INTO laundry.load_event (
-        load_id, run_id, event_type, actor_user_profile_id, details
-      ) VALUES ($1, $2, $3, $4, $5)`,
+        load_id, run_id, event_type, actor_user_profile_id, details, created_at
+      ) VALUES ($1, $2, $3, $4, $5, clock_timestamp())`,
       [loadId, runId, eventType, actorId, details],
     );
   }
@@ -698,7 +729,10 @@ export class LaundryRepository {
           'machineCode', CASE WHEN run.machine_type = 'WASH' THEN 'Y' ELSE 'K' END
             || lpad(run.machine_number::text, 2, '0'),
           'status', run.status, 'priceMinor', run.price_minor::text,
-          'startedAt', run.started_at, 'removedAt', run.removed_at
+          'startedAt', run.started_at,
+          'durationSeconds', run.duration_seconds,
+          'readyAt', run.ready_at,
+          'removedAt', run.removed_at
         ) ORDER BY run.started_at, run.id)
         FROM laundry.machine_run AS run WHERE run.load_id = load.id
       ), '[]'::jsonb) AS runs,
@@ -729,6 +763,13 @@ export class LaundryRepository {
         row.load_id,
       ]),
     );
+  }
+
+  private async getDatabaseTime() {
+    const result = await this.postgres.query<{ server_time: Date }>(
+      `SELECT clock_timestamp() AS server_time`,
+    );
+    return result.rows[0].server_time.toISOString();
   }
 
   private configView(service: ServiceRow, occupied: Map<string, string>) {

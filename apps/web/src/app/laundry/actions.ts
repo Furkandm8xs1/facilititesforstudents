@@ -6,6 +6,7 @@ import { auth } from '@/auth';
 import {
   completeLaundryLoad,
   createLaundryLoad,
+  getLaundryConfig,
   refundLaundryLoad,
   searchLaundryCustomers,
   transferLaundryLoad,
@@ -38,6 +39,14 @@ function revalidateLaundryPages() {
   revalidatePath('/wallet');
   revalidatePath('/laundry');
   revalidatePath('/laundry/manage');
+}
+
+export async function getLaundryClockAction(): Promise<string | null> {
+  const session = await auth();
+  if (!session?.apiAccessToken) return null;
+
+  const config = await getLaundryConfig(session.apiAccessToken);
+  return config?.serverTime ?? null;
 }
 
 export async function manageLaundryAction(

@@ -4,6 +4,9 @@ The laundry module exposes authenticated customer views under `/laundry` and
 operator/manager workflows under `/laundry/manage`.
 
 - Machines are fixed in code: `Y01`-`Y07` and `K01`-`K08`.
+- Every machine run lasts 2 hours 30 minutes. Its expected finish time is
+  stored as an immutable snapshot, and clothes cannot be removed or transferred
+  earlier.
 - Starting or transferring to a machine snapshots the current tariff and
   captures it from the customer's wallet in the same database transaction.
 - A load keeps every machine run and immutable event as history.
