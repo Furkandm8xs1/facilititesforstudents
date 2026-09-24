@@ -5,8 +5,11 @@
   açıktır. Fiyat düzenleme yalnız yöneticiye gösterilir ve Server Action içinde
   ayrıca doğrulanır.
 - Ücret doğuran create, transfer ve refund isteklerinin idempotency UUID'si
-  tarayıcıdan alınmaz; Server Action tarafından üretilir.
+  form ömrü boyunca korunur ve yalnız başarılı işlemden sonra yenilenir.
 - Kullanıcı ve yönetim ekranları 20 saniyede bir `router.refresh()` ile
-  güncellenir. API çağrıları `no-store` kullanır.
+  güncellenir; kalan süre sayaçları saniyede bir ilerler. API çağrıları
+  `no-store` kullanır.
+- Planlanan çıkış saati ve saat/dakika/saniye cinsinden kalan süre kullanıcı ve
+  operatör kartlarında gösterilir.
 - Makine listesi, API'nin uygunluk alanlarının yanında aktif run kayıtlarıyla
   da süzülür; operatöre yalnız boş makineler sunulur.

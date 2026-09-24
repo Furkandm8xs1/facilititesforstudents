@@ -1,4 +1,5 @@
 export const LAUNDRY_SERVICE_CODE = 'laundry-main';
+export const LAUNDRY_RUN_DURATION_SECONDS = 9_000;
 
 export const LAUNDRY_MACHINES = Object.freeze([
   ...Array.from({ length: 7 }, (_, index) => ({

@@ -1903,6 +1903,24 @@ h2 {
   font-size: 0.75rem;
 }
 
+.laundry-run .laundry-countdown {
+  color: #0f5d73;
+  font-weight: 800;
+}
+
+.laundry-run .laundry-countdown-ready {
+  color: #9a3412;
+}
+
+.laundry-run-timing {
+  min-width: 220px;
+}
+
+.laundry-run-timing time {
+  color: var(--foreground);
+  font-weight: 700;
+}
+
 .laundry-management-header {
   padding-bottom: 48px;
   border-bottom: 1px solid var(--border);

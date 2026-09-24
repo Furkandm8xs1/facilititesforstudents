@@ -46,6 +46,22 @@ describe('LaundryService', () => {
     ).rejects.toThrow(ConflictException);
   });
 
+  it('prevents removing clothes before the machine duration ends', async () => {
+    const repository = {
+      completeLoad: vi
+        .fn()
+        .mockRejectedValue(new LaundryRuleError('RUN_NOT_READY')),
+    } as unknown as LaundryRepository;
+    const service = new LaundryService(repository);
+
+    await expect(
+      service.completeLoad(
+        'operator-subject',
+        '550e8400-e29b-41d4-a716-446655440000',
+      ),
+    ).rejects.toThrow(ConflictException);
+  });
+
   it('converts manager tariff prices to minor units', async () => {
     const repository = {
       updateTariffs: vi.fn().mockResolvedValue({}),

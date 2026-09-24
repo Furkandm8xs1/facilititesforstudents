@@ -1,6 +1,8 @@
 import type { LaundryLoad, LaundryRun } from '@/lib/api';
 import { formatTryMinor } from '@/lib/money';
 
+import { LaundryRunCountdown } from './run-countdown';
+
 const dateFormatter = new Intl.DateTimeFormat('tr-TR', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -60,12 +62,24 @@ export function LaundryLoadCard({
           <div className="laundry-run" key={run.id}>
             <div>
               <strong>{machineLabel(run)}</strong>
-              <span>{run.removedAt ? 'Makineden çıkarıldı' : 'Makinede'}</span>
+              <span>{run.removedAt ? 'Kıyafet çıktı' : 'Makinede'}</span>
+              {!run.removedAt ? (
+                <LaundryRunCountdown readyAt={run.readyAt} />
+              ) : null}
             </div>
-            <div>
-              <time dateTime={run.startedAt}>
-                {dateFormatter.format(new Date(run.startedAt))}
+            <div className="laundry-run-timing">
+              <span>Planlanan çıkış</span>
+              <time dateTime={run.readyAt}>
+                {dateFormatter.format(new Date(run.readyAt))}
               </time>
+              {run.removedAt ? (
+                <>
+                  <span>Çıkarıldığı saat</span>
+                  <time dateTime={run.removedAt}>
+                    {dateFormatter.format(new Date(run.removedAt))}
+                  </time>
+                </>
+              ) : null}
               <strong>{formatTryMinor(run.priceMinor)}</strong>
             </div>
           </div>

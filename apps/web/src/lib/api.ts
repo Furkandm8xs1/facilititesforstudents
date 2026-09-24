@@ -159,6 +159,8 @@ export interface LaundryRun {
   status: string;
   priceMinor: string;
   startedAt: string;
+  durationSeconds: number;
+  readyAt: string;
   removedAt?: string | null;
 }
 
@@ -202,11 +204,13 @@ export interface LaundryMachine {
 export interface LaundryOverview {
   activeLoads: LaundryLoad[];
   history: LaundryLoad[];
+  serverTime: string;
 }
 
 export interface LaundryConfig {
   tariffs: LaundryTariffs;
   machines: LaundryMachine[];
+  serverTime: string;
 }
 
 export interface LaundryManagement extends LaundryConfig {

@@ -16,6 +16,9 @@ in `public.schema_migration`.
 | [`006_tea_cafe.sql`](./006_tea_cafe.sql)                                   | Adds the Tea & Cafe service unit and timed brew records                                                                                                   |
 | [`007_laundry.sql`](./007_laundry.sql)                                     | Adds fixed-machine laundry tariffs, loads, price-snapshotted runs, immutable events, occupancy constraints, and idempotency                               |
 | [`008_laundry_run_history_guard.sql`](./008_laundry_run_history_guard.sql) | Restricts machine-run updates to the one-way in-machine to removed transition                                                                             |
+| [`009_laundry_run_timing.sql`](./009_laundry_run_timing.sql)               | Adds the fixed 150-second machine duration, expected finish time, and immutable timing snapshots                                                          |
+| [`010_laundry_fixed_duration.sql`](./010_laundry_fixed_duration.sql)       | Enforces the 150-second duration at the database boundary                                                                                                 |
+| [`011_laundry_run_duration.sql`](./011_laundry_run_duration.sql)           | Changes every machine run to 2 hours 30 minutes and recalculates existing expected finish times                                                           |
 
 The fourth migration describes the original order design. The fifth migration
 is intentionally separate because migration history must show how an existing

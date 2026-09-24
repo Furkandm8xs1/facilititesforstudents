@@ -5,6 +5,7 @@ export type LaundryRuleErrorCode =
   | 'CUSTOMER_NOT_ACTIVE'
   | 'LOAD_NOT_FOUND'
   | 'LOAD_STATE_CONFLICT'
+  | 'RUN_NOT_READY'
   | 'MACHINE_OCCUPIED'
   | 'SAME_MACHINE'
   | 'IDEMPOTENCY_CONFLICT'

@@ -101,6 +101,10 @@ export class LaundryService {
           throw new ConflictException(
             'Çamaşır yükü mevcut durumunda bu işleme uygun değil.',
           );
+        case 'RUN_NOT_READY':
+          throw new ConflictException(
+            'Makine süresi henüz bitmedi. Kıyafetler süre tamamlandıktan sonra çıkarılabilir veya aktarılabilir.',
+          );
         case 'MACHINE_OCCUPIED':
           throw new ConflictException('Seçilen makine şu anda dolu.');
         case 'SAME_MACHINE':

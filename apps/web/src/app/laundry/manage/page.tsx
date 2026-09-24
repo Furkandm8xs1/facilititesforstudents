@@ -5,6 +5,7 @@ import { auth } from '@/auth';
 import { getLaundryManagement, type LaundryMachine } from '@/lib/api';
 
 import { LaundryAutoRefresh } from '../auto-refresh';
+import { LaundryClockProvider } from '../laundry-clock';
 import { LaundryLoadCard } from '../load-card';
 import { CustomerSearch } from './customer-search';
 import { LoadOperations } from './load-operations';
@@ -66,94 +67,98 @@ export default async function LaundryManagementPage() {
       ) ?? [];
 
   return (
-    <main className="laundry-shell laundry-management-shell">
-      <LaundryAutoRefresh />
-      <nav className="laundry-nav">
-        <Link className="back-link" href="/laundry">
-          ← Laundry durumuna dön
-        </Link>
-        <Link className="text-action" href="/">
-          Portal ana sayfası
-        </Link>
-      </nav>
+    <LaundryClockProvider
+      initialServerTime={management?.serverTime ?? new Date().toISOString()}
+    >
+      <main className="laundry-shell laundry-management-shell">
+        <LaundryAutoRefresh />
+        <nav className="laundry-nav">
+          <Link className="back-link" href="/laundry">
+            ← Laundry durumuna dön
+          </Link>
+          <Link className="text-action" href="/">
+            Portal ana sayfası
+          </Link>
+        </nav>
 
-      <header className="laundry-management-header">
-        <p className="eyebrow">Laundry operasyonu</p>
-        <h1>Makine ve yük yönetimi</h1>
-        <p className="intro">
-          Kullanıcıyı telefonuyla seç, yalnız boş makinelerde işlem başlat.
-          Aktarım yeni bir ücret tahsil eder; iade tüm yükü kapsar.
-        </p>
-      </header>
+        <header className="laundry-management-header">
+          <p className="eyebrow">Laundry operasyonu</p>
+          <h1>Makine ve yük yönetimi</h1>
+          <p className="intro">
+            Kullanıcıyı telefonuyla seç, yalnız boş makinelerde işlem başlat.
+            Aktarım yeni bir ücret tahsil eder; iade tüm yükü kapsar.
+          </p>
+        </header>
 
-      {!management ? (
-        <p className="empty-state" role="alert">
-          Laundry yönetim bilgilerine ulaşılamadı.
-        </p>
-      ) : (
-        <>
-          {isManager ? (
-            <section className="laundry-tariff-section">
-              <div>
-                <p className="eyebrow">Yönetici ayarı</p>
-                <h2>Hizmet fiyatları</h2>
-                <p>
-                  Yeni işlemlerde tahsil edilecek yıkama ve kurutma fiyatları.
-                </p>
+        {!management ? (
+          <p className="empty-state" role="alert">
+            Laundry yönetim bilgilerine ulaşılamadı.
+          </p>
+        ) : (
+          <>
+            {isManager ? (
+              <section className="laundry-tariff-section">
+                <div>
+                  <p className="eyebrow">Yönetici ayarı</p>
+                  <h2>Hizmet fiyatları</h2>
+                  <p>
+                    Yeni işlemlerde tahsil edilecek yıkama ve kurutma fiyatları.
+                  </p>
+                </div>
+                <TariffForm tariffs={management.tariffs} />
+              </section>
+            ) : null}
+
+            <CustomerSearch
+              machines={availableMachines}
+              tariffs={management.tariffs}
+            />
+
+            <section aria-labelledby="active-loads-title">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Canlı operasyon</p>
+                  <h2 id="active-loads-title">Aktif yükler</h2>
+                </div>
+                <span className="network-state">
+                  {management.activeLoads.length} aktif
+                </span>
               </div>
-              <TariffForm tariffs={management.tariffs} />
+              {management.activeLoads.length ? (
+                <div className="laundry-operation-list">
+                  {management.activeLoads.map((load) => (
+                    <LoadOperations
+                      load={load}
+                      machines={availableMachines}
+                      tariffs={management.tariffs}
+                      key={load.id}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <p className="empty-state">Şu anda aktif yük bulunmuyor.</p>
+              )}
             </section>
-          ) : null}
 
-          <CustomerSearch
-            machines={availableMachines}
-            tariffs={management.tariffs}
-          />
-
-          <section aria-labelledby="active-loads-title">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Canlı operasyon</p>
-                <h2 id="active-loads-title">Aktif yükler</h2>
+            <section aria-labelledby="recent-loads-title">
+              <div className="section-heading">
+                <div>
+                  <p className="eyebrow">Son işlemler</p>
+                  <h2 id="recent-loads-title">Tamamlanan ve iade edilenler</h2>
+                </div>
+                <span className="network-state">
+                  {management.recentLoads.length} kayıt
+                </span>
               </div>
-              <span className="network-state">
-                {management.activeLoads.length} aktif
-              </span>
-            </div>
-            {management.activeLoads.length ? (
-              <div className="laundry-operation-list">
-                {management.activeLoads.map((load) => (
-                  <LoadOperations
-                    load={load}
-                    machines={availableMachines}
-                    tariffs={management.tariffs}
-                    key={load.id}
-                  />
+              <div className="laundry-load-list">
+                {management.recentLoads.map((load) => (
+                  <LaundryLoadCard load={load} showOwner key={load.id} />
                 ))}
               </div>
-            ) : (
-              <p className="empty-state">Şu anda aktif yük bulunmuyor.</p>
-            )}
-          </section>
-
-          <section aria-labelledby="recent-loads-title">
-            <div className="section-heading">
-              <div>
-                <p className="eyebrow">Son işlemler</p>
-                <h2 id="recent-loads-title">Tamamlanan ve iade edilenler</h2>
-              </div>
-              <span className="network-state">
-                {management.recentLoads.length} kayıt
-              </span>
-            </div>
-            <div className="laundry-load-list">
-              {management.recentLoads.map((load) => (
-                <LaundryLoadCard load={load} showOwner key={load.id} />
-              ))}
-            </div>
-          </section>
-        </>
-      )}
-    </main>
+            </section>
+          </>
+        )}
+      </main>
+    </LaundryClockProvider>
   );
 }

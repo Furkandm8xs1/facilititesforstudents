@@ -12,6 +12,7 @@ import {
 import { formatTryMinor } from '@/lib/money';
 
 import { manageLaundryAction, type LaundryActionState } from '../actions';
+import { useLaundryNow } from '../laundry-clock';
 import { LaundryLoadCard } from '../load-card';
 
 const initialState: LaundryActionState = { status: 'idle', message: '' };
@@ -26,6 +27,7 @@ export function LoadOperations({
   tariffs: LaundryTariffs;
 }) {
   const [machineType, setMachineType] = useState<LaundryMachineType>('WASH');
+  const now = useLaundryNow();
   const [transferState, transferAction, transferPending] = useActionState(
     manageLaundryAction,
     initialState,
@@ -44,6 +46,13 @@ export function LoadOperations({
     (machine) => machine.machineType === machineType,
   );
   const price = formatTryMinor(getLaundryPriceMinor(tariffs, machineType));
+  const activeRun = [...load.runs]
+    .reverse()
+    .find((run) => run.status === 'IN_MACHINE' && !run.removedAt);
+  const runReady =
+    now > 0 &&
+    activeRun !== undefined &&
+    new Date(activeRun.readyAt).getTime() <= now;
 
   useEffect(() => {
     if (
@@ -77,9 +86,15 @@ export function LoadOperations({
         <form action={completeAction}>
           <input type="hidden" name="intent" value="complete" />
           <input type="hidden" name="loadId" value={load.id} />
-          <button className="secondary-action" disabled={completePending}>
-            {completePending ? 'Tamamlanıyor…' : 'Yükü tamamla'}
+          <button
+            className="secondary-action"
+            disabled={completePending || !runReady}
+          >
+            {completePending ? 'Tamamlanıyor…' : 'Kıyafetleri çıkar ve tamamla'}
           </button>
+          {!runReady ? (
+            <small>Makine süresi bitince çıkarma işlemi açılır.</small>
+          ) : null}
           <p
             className={`form-message form-message-${completeState.status}`}
             aria-live="polite"
@@ -127,7 +142,9 @@ export function LoadOperations({
           </label>
           <button
             className="primary-action"
-            disabled={transferPending || matchingMachines.length === 0}
+            disabled={
+              transferPending || matchingMachines.length === 0 || !runReady
+            }
           >
             {transferPending
               ? 'Aktarılıyor…'
