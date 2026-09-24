@@ -8,6 +8,6 @@ import { WalletService } from './wallet.service';
 @Module({
   controllers: [WalletController, CashierWalletController],
   providers: [WalletRepository, WalletService],
-  exports: [WalletService],
+  exports: [WalletRepository, WalletService],
 })
 export class WalletModule {}

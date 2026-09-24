@@ -142,6 +142,104 @@ export interface TeaCafeMutationResult {
   errors?: Record<string, string>;
 }
 
+export type LaundryMachineType = 'WASH' | 'DRY';
+
+export interface LaundryOwner {
+  id?: string;
+  phoneE164: string;
+  firstName: string;
+  lastName: string;
+  status?: 'ACTIVE' | 'SUSPENDED' | 'DEPARTED';
+}
+
+export interface LaundryRun {
+  id: string;
+  machineType: LaundryMachineType;
+  machineNumber: number;
+  status: string;
+  priceMinor: string;
+  startedAt: string;
+  removedAt?: string | null;
+}
+
+export interface LaundryLoad {
+  id: string;
+  status: string;
+  owner?: LaundryOwner;
+  ownerUserProfileId?: string;
+  phoneE164?: string;
+  customerName?: string;
+  runs: LaundryRun[];
+  currentRun?: LaundryRun | null;
+  location?: LaundryRun | { status: string } | null;
+  totalPriceMinor?: string;
+  createdAt: string;
+  completedAt?: string | null;
+  refundedAt?: string | null;
+}
+
+export type LaundryTariffs =
+  | {
+      washPriceMinor?: string;
+      dryPriceMinor?: string;
+      WASH?: string | { priceMinor?: string };
+      DRY?: string | { priceMinor?: string };
+    }
+  | Array<{ machineType: LaundryMachineType; priceMinor: string }>;
+
+export interface LaundryMachine {
+  machineType: LaundryMachineType;
+  machineNumber: number;
+  type?: LaundryMachineType;
+  number?: number;
+  code?: string;
+  status?: string;
+  available?: boolean;
+  isAvailable?: boolean;
+  occupied?: boolean;
+}
+
+export interface LaundryOverview {
+  activeLoads: LaundryLoad[];
+  history: LaundryLoad[];
+}
+
+export interface LaundryConfig {
+  tariffs: LaundryTariffs;
+  machines: LaundryMachine[];
+}
+
+export interface LaundryManagement extends LaundryConfig {
+  activeLoads: LaundryLoad[];
+  recentLoads: LaundryLoad[];
+}
+
+export interface LaundryMutationResult {
+  ok: boolean;
+  message: string;
+  errors?: Record<string, string>;
+}
+
+export function getLaundryPriceMinor(
+  tariffs: LaundryTariffs,
+  machineType: LaundryMachineType,
+): string {
+  if (Array.isArray(tariffs)) {
+    return (
+      tariffs.find((tariff) => tariff.machineType === machineType)
+        ?.priceMinor ?? '0'
+    );
+  }
+
+  const direct =
+    machineType === 'WASH' ? tariffs.washPriceMinor : tariffs.dryPriceMinor;
+  const keyed = tariffs[machineType];
+
+  return (
+    direct ?? (typeof keyed === 'string' ? keyed : keyed?.priceMinor) ?? '0'
+  );
+}
+
 export type CanteenOrderStatus =
   | 'PLACED'
   | 'PREPARING'
@@ -669,6 +767,184 @@ async function teaCafeMutation(
         typeof body.message === 'string'
           ? body.message
           : 'Tea & Cafe işlemi tamamlanamadı.',
+      errors: body.errors,
+    };
+  }
+
+  return { ok: true, message: successMessage };
+}
+
+export async function getLaundryOverview(
+  accessToken: string,
+): Promise<LaundryOverview | null> {
+  return laundryGet(accessToken, '/laundry/me');
+}
+
+export async function getLaundryConfig(
+  accessToken: string,
+): Promise<LaundryConfig | null> {
+  return laundryGet(accessToken, '/laundry/config');
+}
+
+export async function getLaundryManagement(
+  accessToken: string,
+): Promise<LaundryManagement | null> {
+  return laundryGet(accessToken, '/laundry/manage');
+}
+
+export async function searchLaundryCustomers(
+  accessToken: string,
+  phone: string,
+): Promise<LaundryOwner[]> {
+  if (!phone) {
+    return [];
+  }
+
+  const response = await fetch(
+    `${process.env.API_BASE_URL}/laundry/manage/customers/search`,
+    {
+      method: 'POST',
+      headers: {
+        Authorization: `Bearer ${accessToken}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ phone }),
+      cache: 'no-store',
+    },
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const result = (await response.json()) as
+    LaundryOwner[] | { customers: LaundryOwner[] };
+
+  if (Array.isArray(result)) {
+    return result;
+  }
+
+  return result?.customers ?? [];
+}
+
+export function createLaundryLoad(
+  accessToken: string,
+  payload: {
+    phoneE164: string;
+    machineType: LaundryMachineType;
+    machineNumber: number;
+    idempotencyKey: string;
+  },
+) {
+  return laundryMutation(
+    accessToken,
+    'POST',
+    '/laundry/manage/loads',
+    payload,
+    'Yıkama kaydı açıldı ve ücret tahsil edildi.',
+  );
+}
+
+export function transferLaundryLoad(
+  accessToken: string,
+  loadId: string,
+  payload: {
+    machineType: LaundryMachineType;
+    machineNumber: number;
+    idempotencyKey: string;
+  },
+) {
+  return laundryMutation(
+    accessToken,
+    'POST',
+    `/laundry/manage/loads/${encodeURIComponent(loadId)}/transfer`,
+    payload,
+    'Yük başka makineye aktarıldı ve yeni ücret tahsil edildi.',
+  );
+}
+
+export function completeLaundryLoad(accessToken: string, loadId: string) {
+  return laundryMutation(
+    accessToken,
+    'POST',
+    `/laundry/manage/loads/${encodeURIComponent(loadId)}/complete`,
+    {},
+    'Yük tamamlandı.',
+  );
+}
+
+export function refundLaundryLoad(
+  accessToken: string,
+  loadId: string,
+  payload: { reason: string; idempotencyKey: string },
+) {
+  return laundryMutation(
+    accessToken,
+    'POST',
+    `/laundry/manage/loads/${encodeURIComponent(loadId)}/refund`,
+    payload,
+    'Yükün tüm ücretleri iade edildi.',
+  );
+}
+
+export function updateLaundryTariffs(
+  accessToken: string,
+  payload: { washPriceTl: number; dryPriceTl: number },
+) {
+  return laundryMutation(
+    accessToken,
+    'PATCH',
+    '/laundry/manage/tariffs',
+    payload,
+    'Laundry fiyatları güncellendi.',
+  );
+}
+
+async function laundryGet<T>(
+  accessToken: string,
+  path: string,
+): Promise<T | null> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+    cache: 'no-store',
+  });
+
+  if (!response.ok) {
+    console.error(`GET ${path} başarısız: HTTP ${response.status}`);
+    return null;
+  }
+
+  return (await response.json()) as T;
+}
+
+async function laundryMutation(
+  accessToken: string,
+  method: 'POST' | 'PATCH',
+  path: string,
+  payload: object,
+  successMessage: string,
+): Promise<LaundryMutationResult> {
+  const response = await fetch(`${process.env.API_BASE_URL}${path}`, {
+    method,
+    headers: {
+      Authorization: `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+    cache: 'no-store',
+  });
+  const body = (await response.json().catch(() => ({}))) as {
+    message?: string | string[];
+    errors?: Record<string, string>;
+  };
+
+  if (!response.ok) {
+    return {
+      ok: false,
+      message:
+        typeof body.message === 'string'
+          ? body.message
+          : 'Laundry işlemi tamamlanamadı.',
       errors: body.errors,
     };
   }

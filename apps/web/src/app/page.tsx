@@ -15,10 +15,10 @@ const services = [
   },
   {
     title: 'Laundry',
-    description: 'Çamaşırhane hizmetleri bu portal üzerinden yönetilecek.',
-    status: 'Sonraki aşama',
-    active: false,
-    href: null,
+    description: 'Aktif çamaşır ve kurutma işlemlerini, ücretleriyle takip et.',
+    status: 'Durumu gör',
+    active: true,
+    href: '/laundry',
   },
   {
     title: 'Kitchen',
@@ -81,6 +81,13 @@ export default async function Home() {
           ) ? (
             <Link className="text-action" href="/canteen/manage">
               Kantin yönetimi
+            </Link>
+          ) : null}
+          {session.user.roles.some(
+            (role) => role === 'laundry_manager' || role === 'laundry_operator',
+          ) ? (
+            <Link className="text-action" href="/laundry/manage">
+              Laundry yönetimi
             </Link>
           ) : null}
           {session.user.roles.includes('tea_cafe_attendant') ? (
