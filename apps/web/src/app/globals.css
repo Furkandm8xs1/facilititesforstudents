@@ -1650,13 +1650,16 @@ h2 {
 
 .brew-details dt {
   color: var(--muted);
-  font-size: 0.68rem;
+  font-size: 0.78rem;
+  font-weight: 700;
 }
 
 .brew-details dd {
   margin: 0;
-  font-size: 0.82rem;
-  font-weight: 750;
+  font-size: 1.05rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.35;
 }
 
 .brew-card-footer small {

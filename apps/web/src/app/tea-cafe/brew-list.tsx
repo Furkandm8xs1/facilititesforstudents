@@ -15,6 +15,13 @@ const timeFormatter = new Intl.DateTimeFormat('tr-TR', {
   hour: '2-digit',
   minute: '2-digit',
 });
+const dateTimeFormatter = new Intl.DateTimeFormat('tr-TR', {
+  day: '2-digit',
+  month: 'long',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
 
 function remainingLabel(milliseconds: number): string {
   if (milliseconds <= 0) {
@@ -28,6 +35,14 @@ function remainingLabel(milliseconds: number): string {
   return minutes > 0
     ? `${minutes} dk ${String(seconds).padStart(2, '0')} sn`
     : `${seconds} sn`;
+}
+
+function elapsedLabel(milliseconds: number): string {
+  const totalMinutes = Math.max(0, Math.floor(milliseconds / 60_000));
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+
+  return hours > 0 ? `${hours} saat ${minutes} dk` : `${minutes} dk`;
 }
 
 export function BrewList({
@@ -117,8 +132,10 @@ function BrewCard({
       </div>
 
       <div className="brew-countdown">
-        <span>{ready ? 'Durum' : 'Kalan süre'}</span>
-        <strong>{remainingLabel(remaining)}</strong>
+        <span>{ready ? 'Hazır olalı geçen süre' : 'Kalan süre'}</span>
+        <strong>
+          {ready ? elapsedLabel(-remaining) : remainingLabel(remaining)}
+        </strong>
         <div className="brew-progress" aria-hidden="true">
           <span style={{ width: `${progress}%` }} />
         </div>
@@ -126,10 +143,10 @@ function BrewCard({
 
       <dl className="brew-details">
         <div>
-          <dt>Başlangıç</dt>
+          <dt>Demleme tarihi</dt>
           <dd>
             <time dateTime={brew.startedAt}>
-              {timeFormatter.format(startedAt)}
+              {dateTimeFormatter.format(startedAt)}
             </time>
           </dd>
         </div>
