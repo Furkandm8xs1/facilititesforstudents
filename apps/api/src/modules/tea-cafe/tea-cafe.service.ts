@@ -21,7 +21,10 @@ export class TeaCafeService implements OnModuleInit, OnModuleDestroy {
 
   onModuleInit() {
     void this.removeExpiredBrews();
-    this.expiryTimer = setInterval(() => void this.removeExpiredBrews(), 60_000);
+    this.expiryTimer = setInterval(
+      () => void this.removeExpiredBrews(),
+      60_000,
+    );
   }
 
   onModuleDestroy() {

@@ -133,7 +133,9 @@ function BrewCard({
 
       <div className="brew-countdown">
         <span>{ready ? 'Hazır olalı geçen süre' : 'Kalan süre'}</span>
-        <strong>{ready ? elapsedLabel(-remaining) : remainingLabel(remaining)}</strong>
+        <strong>
+          {ready ? elapsedLabel(-remaining) : remainingLabel(remaining)}
+        </strong>
         <div className="brew-progress" aria-hidden="true">
           <span style={{ width: `${progress}%` }} />
         </div>
