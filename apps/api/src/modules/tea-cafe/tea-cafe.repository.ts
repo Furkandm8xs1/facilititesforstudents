@@ -61,6 +61,14 @@ export class TeaCafeRepository {
     return result.rows.map(brewView);
   }
 
+  async deleteExpiredBrews(): Promise<void> {
+    await this.postgres.query(
+      `DELETE FROM tea_cafe.brew
+      WHERE deleted_at IS NULL
+        AND started_at <= now() - INTERVAL '10 hours'`,
+    );
+  }
+
   async createBrew(input: {
     actorSubject: string;
     beverageType: BeverageType;

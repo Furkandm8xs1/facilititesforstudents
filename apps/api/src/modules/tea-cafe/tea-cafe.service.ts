@@ -1,7 +1,10 @@
 import {
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
+  OnModuleDestroy,
+  OnModuleInit,
   ServiceUnavailableException,
 } from '@nestjs/common';
 
@@ -10,8 +13,22 @@ import { parseBrewId, parseCreateBrewInput } from './tea-cafe.input';
 import { TeaCafeRepository } from './tea-cafe.repository';
 
 @Injectable()
-export class TeaCafeService {
+export class TeaCafeService implements OnModuleInit, OnModuleDestroy {
+  private readonly logger = new Logger(TeaCafeService.name);
+  private expiryTimer: ReturnType<typeof setInterval> | undefined;
+
   constructor(private readonly teaCafe: TeaCafeRepository) {}
+
+  onModuleInit() {
+    void this.removeExpiredBrews();
+    this.expiryTimer = setInterval(() => void this.removeExpiredBrews(), 60_000);
+  }
+
+  onModuleDestroy() {
+    if (this.expiryTimer) {
+      clearInterval(this.expiryTimer);
+    }
+  }
 
   async listBrews() {
     try {
@@ -42,6 +59,14 @@ export class TeaCafeService {
       return { deleted: true };
     } catch (error) {
       this.rethrowRuleError(error);
+    }
+  }
+
+  private async removeExpiredBrews() {
+    try {
+      await this.teaCafe.deleteExpiredBrews();
+    } catch (error) {
+      this.logger.error('Süresi dolan demlemeler silinemedi.', error);
     }
   }
 
