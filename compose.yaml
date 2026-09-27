@@ -34,8 +34,9 @@ services:
       KC_DB_USERNAME: ${POSTGRES_USER:-hizmet}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-hizmet_dev_password}
       KC_HEALTH_ENABLED: 'true'
+      KC_HOSTNAME: ${PUBLIC_KEYCLOAK_URL:?PUBLIC_KEYCLOAK_URL must be set in .env}
     ports:
-      - '8080:8080'
+      - '0.0.0.0:8080:8080'
     volumes:
       - ./infra/keycloak:/opt/keycloak/data/import:ro
     depends_on:
@@ -53,9 +54,9 @@ services:
       dockerfile: Dockerfile.api
     environment:
       API_PORT: '3001'
-      CORS_ORIGIN: http://localhost:3000
+      CORS_ORIGIN: ${PUBLIC_WEB_URL:?PUBLIC_WEB_URL must be set in .env}
       DATABASE_URL: postgresql://${POSTGRES_USER:-hizmet}:${POSTGRES_PASSWORD:-hizmet_dev_password}@postgres:5432/${POSTGRES_DB:-hizmet}
-      KEYCLOAK_ISSUER: http://keycloak.localhost:8080/realms/hizmet
+      KEYCLOAK_ISSUER: ${PUBLIC_KEYCLOAK_URL:?PUBLIC_KEYCLOAK_URL must be set in .env}/realms/hizmet
       KEYCLOAK_AUDIENCE: ${KEYCLOAK_AUDIENCE:-portal-api}
       KEYCLOAK_ADMIN_CLIENT_ID: ${KEYCLOAK_ADMIN_CLIENT_ID:-portal-admin-service}
       KEYCLOAK_ADMIN_CLIENT_SECRET: ${KEYCLOAK_ADMIN_CLIENT_SECRET:-hizmet-local-admin-service-secret}
@@ -88,15 +89,15 @@ services:
     environment:
       AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET must be set in .env}
       AUTH_TRUST_HOST: 'true'
-      AUTH_URL: http://localhost:3000
+      AUTH_URL: ${PUBLIC_WEB_URL:?PUBLIC_WEB_URL must be set in .env}
       AUTH_KEYCLOAK_ID: ${AUTH_KEYCLOAK_ID:-portal-web}
       AUTH_KEYCLOAK_SECRET: ${KEYCLOAK_WEB_CLIENT_SECRET:-hizmet-local-web-secret}
-      AUTH_KEYCLOAK_ISSUER: http://keycloak.localhost:8080/realms/hizmet
+      AUTH_KEYCLOAK_ISSUER: ${PUBLIC_KEYCLOAK_URL:?PUBLIC_KEYCLOAK_URL must be set in .env}/realms/hizmet
       API_BASE_URL: http://api:3001/api/v1
       HOSTNAME: 0.0.0.0
       PORT: '3000'
     ports:
-      - '127.0.0.1:3000:3000'
+      - '0.0.0.0:3000:3000'
     depends_on:
       api:
         condition: service_healthy
