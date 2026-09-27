@@ -15,9 +15,9 @@ users. Every authenticated user can create and remove brew records.
 
 ## Endpoints
 
-| Method   | Path                                | Access               | Purpose            |
-| -------- | ----------------------------------- | -------------------- | ------------------ |
-| `GET`    | `/api/v1/tea-cafe/brews`            | Authenticated        | List visible brews |
-| `GET`    | `/api/v1/tea-cafe/manage/brews`     | Authenticated        | List visible brews |
-| `POST`   | `/api/v1/tea-cafe/manage/brews`     | Authenticated        | Create a brew      |
-| `DELETE` | `/api/v1/tea-cafe/manage/brews/:id` | Authenticated        | Soft-delete a brew |
+| Method   | Path                                | Access        | Purpose            |
+| -------- | ----------------------------------- | ------------- | ------------------ |
+| `GET`    | `/api/v1/tea-cafe/brews`            | Authenticated | List visible brews |
+| `GET`    | `/api/v1/tea-cafe/manage/brews`     | Authenticated | List visible brews |
+| `POST`   | `/api/v1/tea-cafe/manage/brews`     | Authenticated | Create a brew      |
+| `DELETE` | `/api/v1/tea-cafe/manage/brews/:id` | Authenticated | Soft-delete a brew |
