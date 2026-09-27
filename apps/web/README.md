@@ -27,7 +27,7 @@ role-aware routing, and calls the NestJS API from server-side code.
 | `/canteen`                | Authenticated                           | Browse products, order, cancel, and track status         |
 | `/canteen/manage`         | `canteen_manager` or `canteen_operator` | Operate orders and manage catalog/stock                  |
 | `/tea-cafe`               | Authenticated                           | Follow live tea and coffee readiness                     |
-| `/tea-cafe/manage`        | `tea_cafe_attendant`                    | Create and remove brew records                           |
+| `/tea-cafe/manage`        | Authenticated                           | Create and remove brew records                           |
 | `/api/auth/[...nextauth]` | NextAuth                                | OAuth/OIDC callback and session endpoints                |
 
 ## Configuration
