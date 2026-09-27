@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Image from 'next/image';
 import { redirect } from 'next/navigation';
 
 import { auth, signOut } from '@/auth';
@@ -59,6 +60,43 @@ export default async function Home() {
 
   return (
     <main className="portal-shell">
+      <Image
+        className="portal-brand"
+        src="/icon.png"
+        alt="Suleymaniye"
+        width={1920}
+        height={1080}
+        sizes="(max-width: 520px) 58vw, 280px"
+        priority
+      />
+
+      {session.authError ? (
+        <p className="session-warning" role="alert">
+          Oturum yenilenemedi. Güvenli biçimde yeniden giriş yapmalısın.
+        </p>
+      ) : null}
+
+      <header className="portal-header">
+        <div>
+          <p className="eyebrow">Yurt içi hizmet ağı</p>
+          <h1>İhtiyacın olan hizmetler tek yerde.</h1>
+          <p className="intro">
+            Ortak hesabın ve bakiyenle yurt hizmetlerine güvenli biçimde eriş.
+          </p>
+        </div>
+        <Link className="balance-card" href="/wallet">
+          <span>Ortak bakiye</span>
+          <strong>
+            {wallet ? formatTryMinor(wallet.account.availableMinor) : '—'}
+          </strong>
+          <small>
+            {wallet
+              ? `Bloke: ${formatTryMinor(wallet.account.heldMinor)} · Hareketleri gör`
+              : 'Cüzdan bilgisine ulaşılamadı'}
+          </small>
+        </Link>
+      </header>
+
       <nav className="account-bar" aria-label="Hesap bilgileri">
         <div>
           <strong>{displayName}</strong>
@@ -105,33 +143,6 @@ export default async function Home() {
           </form>
         </div>
       </nav>
-
-      {session.authError ? (
-        <p className="session-warning" role="alert">
-          Oturum yenilenemedi. Güvenli biçimde yeniden giriş yapmalısın.
-        </p>
-      ) : null}
-
-      <header className="portal-header">
-        <div>
-          <p className="eyebrow">Yurt içi hizmet ağı</p>
-          <h1>İhtiyacın olan hizmetler tek yerde.</h1>
-          <p className="intro">
-            Ortak hesabın ve bakiyenle yurt hizmetlerine güvenli biçimde eriş.
-          </p>
-        </div>
-        <Link className="balance-card" href="/wallet">
-          <span>Ortak bakiye</span>
-          <strong>
-            {wallet ? formatTryMinor(wallet.account.availableMinor) : '—'}
-          </strong>
-          <small>
-            {wallet
-              ? `Bloke: ${formatTryMinor(wallet.account.heldMinor)} · Hareketleri gör`
-              : 'Cüzdan bilgisine ulaşılamadı'}
-          </small>
-        </Link>
-      </header>
 
       <section aria-labelledby="services-title">
         <div className="section-heading">

@@ -50,13 +50,20 @@ button {
   padding: 72px 0 96px;
 }
 
+.portal-brand {
+  display: block;
+  width: min(280px, 58vw);
+  height: auto;
+  margin: 0 0 48px;
+}
+
 .account-bar {
   display: flex;
   gap: 24px;
   align-items: center;
   justify-content: space-between;
   padding: 14px 18px;
-  margin-bottom: 56px;
+  margin: 56px 0 0;
   background: rgb(255 253 248 / 72%);
   border: 1px solid var(--border);
   border-radius: 18px;
