@@ -21,19 +21,15 @@ export default async function TeaCafePage() {
   const brewingCount =
     brews?.filter((brew) => new Date(brew.readyAt).getTime() > initialNow)
       .length ?? 0;
-  const canManage = session.user.roles.includes('tea_cafe_attendant');
-
   return (
     <main className="tea-cafe-shell">
       <nav className="tea-cafe-nav">
         <Link className="back-link" href="/">
           ← Portala dön
         </Link>
-        {canManage ? (
-          <Link className="text-action" href="/tea-cafe/manage">
-            Demlemeleri yönet
-          </Link>
-        ) : null}
+        <Link className="text-action" href="/tea-cafe/manage">
+          Demlemeleri yönet
+        </Link>
       </nav>
 
       <header className="tea-cafe-header">

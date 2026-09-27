@@ -90,11 +90,9 @@ export default async function Home() {
               Laundry yönetimi
             </Link>
           ) : null}
-          {session.user.roles.includes('tea_cafe_attendant') ? (
-            <Link className="text-action" href="/tea-cafe/manage">
-              Tea & Cafe yönetimi
-            </Link>
-          ) : null}
+          <Link className="text-action" href="/tea-cafe/manage">
+            Tea & Cafe yönetimi
+          </Link>
           <form
             action={async () => {
               'use server';

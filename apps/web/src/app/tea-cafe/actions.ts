@@ -28,13 +28,10 @@ export async function createBrewAction(
 ): Promise<TeaCafeActionState> {
   const session = await auth();
 
-  if (
-    !session?.apiAccessToken ||
-    !session.user.roles.includes('tea_cafe_attendant')
-  ) {
+  if (!session?.apiAccessToken) {
     return {
       status: 'error',
-      message: 'Bu işlem için çayhane görevlisi yetkisi gerekiyor.',
+      message: 'Bu işlem için oturum açmanız gerekiyor.',
     };
   }
 
@@ -68,13 +65,10 @@ export async function deleteBrewAction(
 ): Promise<TeaCafeActionState> {
   const session = await auth();
 
-  if (
-    !session?.apiAccessToken ||
-    !session.user.roles.includes('tea_cafe_attendant')
-  ) {
+  if (!session?.apiAccessToken) {
     return {
       status: 'error',
-      message: 'Bu işlem için çayhane görevlisi yetkisi gerekiyor.',
+      message: 'Bu işlem için oturum açmanız gerekiyor.',
     };
   }
 

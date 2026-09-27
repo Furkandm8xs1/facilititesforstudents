@@ -14,10 +14,6 @@ export default async function TeaCafeManagementPage() {
     redirect('/login');
   }
 
-  if (!session.user.roles.includes('tea_cafe_attendant')) {
-    redirect('/tea-cafe');
-  }
-
   const overview = await getTeaCafeOverview(session.apiAccessToken);
   const brews = overview?.brews ?? null;
   const initialNow = overview
@@ -36,7 +32,7 @@ export default async function TeaCafeManagementPage() {
       </nav>
 
       <header className="tea-cafe-management-header">
-        <p className="eyebrow">Çayhane görevlisi</p>
+        <p className="eyebrow">Çayhane servisi</p>
         <h1>Demlemeleri yönet</h1>
         <p className="intro">
           Her yeni demlik veya kahve için ayrı kayıt açabilirsin. Çayın hazır

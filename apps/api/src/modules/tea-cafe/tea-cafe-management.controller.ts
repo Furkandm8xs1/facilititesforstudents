@@ -9,10 +9,8 @@ import {
 } from '@nestjs/common';
 
 import type { AuthenticatedRequest } from '../../auth/authenticated-request';
-import { RequireRoles } from '../../auth/roles.decorator';
 import { TeaCafeService } from './tea-cafe.service';
 
-@RequireRoles('tea_cafe_attendant')
 @Controller('tea-cafe/manage')
 export class TeaCafeManagementController {
   constructor(private readonly teaCafe: TeaCafeService) {}

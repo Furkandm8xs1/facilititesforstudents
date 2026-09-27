@@ -81,7 +81,7 @@ export class TeaCafeService implements OnModuleInit, OnModuleDestroy {
     switch (error.code) {
       case 'ACTOR_PROFILE_NOT_FOUND':
         throw new ForbiddenException(
-          'Aktif bir çayhane görevlisi profiliyle işlem yapılmalıdır.',
+          'Aktif bir kullanıcı profiliyle işlem yapılmalıdır.',
         );
       case 'SERVICE_UNIT_NOT_FOUND':
         throw new ServiceUnavailableException(
