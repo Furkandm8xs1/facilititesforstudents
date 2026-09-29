@@ -42,12 +42,12 @@ afb634c  --- eski Tea Cafe branch ucu
 
 Buradaki önemli ayrım şudur:
 
-| İşaretçi | Anlamı |
-| --- | --- |
-| `main` | Bilgisayardaki yerel dal |
-| `origin/main` | GitHub'daki dalın en son bilinen ucu |
-| `feature/tea-cafe` | Bilgisayardaki feature dalı |
-| `origin/feature/tea-cafe` | GitHub'daki feature dalı |
+| İşaretçi                  | Anlamı                               |
+| ------------------------- | ------------------------------------ |
+| `main`                    | Bilgisayardaki yerel dal             |
+| `origin/main`             | GitHub'daki dalın en son bilinen ucu |
+| `feature/tea-cafe`        | Bilgisayardaki feature dalı          |
+| `origin/feature/tea-cafe` | GitHub'daki feature dalı             |
 
 Yerel `main`in bir commit önde olması, commit'in otomatik olarak GitHub'a
 gönderildiği anlamına gelmez. Bunu yalnızca `git push origin main` yapar.
