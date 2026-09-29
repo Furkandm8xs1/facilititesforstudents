@@ -6,6 +6,14 @@ import { placeOrderAction, type OrderActionState } from './actions';
 
 const initialState: OrderActionState = { status: 'idle', message: '' };
 
+function createIdempotencyKey(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
+
 export function OrderProductForm({
   productId,
   availableStock,
@@ -23,13 +31,13 @@ export function OrderProductForm({
 
   useEffect(() => {
     if (idempotencyRef.current && !idempotencyRef.current.value) {
-      idempotencyRef.current.value = crypto.randomUUID();
+      idempotencyRef.current.value = createIdempotencyKey();
     }
   }, []);
 
   useEffect(() => {
     if (state.status === 'success' && idempotencyRef.current) {
-      idempotencyRef.current.value = crypto.randomUUID();
+      idempotencyRef.current.value = createIdempotencyKey();
     }
   }, [state.status, state.message]);
 

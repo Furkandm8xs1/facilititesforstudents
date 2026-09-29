@@ -208,11 +208,14 @@
       "standardFlowEnabled": true,
       "directAccessGrantsEnabled": false,
       "serviceAccountsEnabled": false,
-      "redirectUris": ["http://localhost:3000/*"],
-      "webOrigins": ["http://localhost:3000"],
+      "redirectUris": [
+        "http://localhost:3000/*",
+        "http://192.168.6.119:3000/*"
+      ],
+      "webOrigins": ["http://localhost:3000", "http://192.168.6.119:3000"],
       "attributes": {
         "pkce.code.challenge.method": "S256",
-        "post.logout.redirect.uris": "http://localhost:3000/*"
+        "post.logout.redirect.uris": "http://localhost:3000/*##http://192.168.6.119:3000/*"
       },
       "defaultClientScopes": ["portal-api-access"],
       "optionalClientScopes": ["profile"]
