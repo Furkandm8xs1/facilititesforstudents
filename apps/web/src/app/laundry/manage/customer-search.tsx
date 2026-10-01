@@ -3,6 +3,7 @@
 import { useActionState, useState } from 'react';
 
 import type { LaundryMachine, LaundryOwner, LaundryTariffs } from '@/lib/api';
+import { CountryPhoneInput } from '@/app/admin/users/new/country-phone-input';
 
 import {
   searchLaundryCustomersAction,
@@ -40,12 +41,9 @@ export function CustomerSearch({
           <h2 id="customer-search-title">Öğrenciyi telefonla bul</h2>
         </div>
         <form action={formAction} className="search-form">
-          <input
-            name="phone"
-            type="tel"
-            placeholder="+905551112233"
-            autoComplete="off"
-            required
+          <CountryPhoneInput
+            phoneFieldName="phone"
+            showHelperText={false}
           />
           <button className="primary-action" disabled={pending}>
             {pending ? 'Aranıyor…' : 'Öğrenci ara'}

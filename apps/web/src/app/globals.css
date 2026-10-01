@@ -917,6 +917,14 @@ h2 {
   white-space: nowrap;
 }
 
+.search-form .phone-field {
+  min-width: 0;
+}
+
+.search-form .primary-action {
+  align-self: end;
+}
+
 .wallet-search-results {
   display: grid;
   gap: 10px;
@@ -2079,8 +2087,38 @@ h2 {
 }
 
 .laundry-management-header {
-  padding-bottom: 48px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+  gap: clamp(28px, 7vw, 88px);
+  align-items: end;
+  padding-bottom: 56px;
   border-bottom: 1px solid var(--border);
+}
+
+.laundry-management-header .intro {
+  max-width: 650px;
+}
+
+.laundry-management-state {
+  display: flex;
+  min-height: 190px;
+  padding: 28px;
+  flex-direction: column;
+  justify-content: space-between;
+  color: #f5fbff;
+  background: #28556a;
+  border-radius: 28px;
+  box-shadow: 0 24px 50px rgb(40 85 106 / 18%);
+}
+
+.laundry-management-state > span,
+.laundry-management-state > small {
+  opacity: 0.76;
+}
+
+.laundry-management-state > strong {
+  font-size: clamp(1.65rem, 3vw, 2.1rem);
+  letter-spacing: -0.045em;
 }
 
 .laundry-tariff-section,
@@ -2195,6 +2233,7 @@ h2 {
   background: rgb(255 253 248 / 72%);
   border: 1px solid var(--border);
   border-radius: 24px;
+  box-shadow: 0 18px 44px rgb(54 69 60 / 7%);
 }
 
 .laundry-operation-card > .laundry-load-card {
@@ -2203,11 +2242,35 @@ h2 {
   box-shadow: none;
 }
 
+.laundry-operation-summary {
+  cursor: pointer;
+  outline: none;
+}
+
+.laundry-operation-summary:focus-visible {
+  box-shadow: 0 0 0 3px rgb(29 107 79 / 28%);
+}
+
+.laundry-operation-summary > .laundry-load-card {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+  transition: background 160ms ease;
+}
+
+.laundry-operation-summary:hover > .laundry-load-card {
+  background: #fffefa;
+}
+
+.laundry-operation-card-open .laundry-operation-summary > .laundry-load-card {
+  background: #fffefa;
+}
+
 .laundry-operation-actions {
   display: grid;
-  grid-template-columns: 0.65fr 1.6fr 1fr;
-  gap: 16px;
-  padding: 20px 24px 24px;
+  grid-template-columns: 1fr;
+  gap: 14px;
+  padding: 18px;
   background: #eef3f3;
   border-top: 1px solid var(--border);
 }
@@ -2220,6 +2283,37 @@ h2 {
 
 .laundry-transfer-form {
   grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.laundry-management-shell .laundry-operation-list {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 18px;
+}
+
+.laundry-management-shell .laundry-operation-card {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+}
+
+.laundry-management-shell .laundry-operation-card > .laundry-load-card {
+  height: 100%;
+  padding: 20px;
+}
+
+.laundry-management-shell .laundry-operation-summary > .laundry-load-card {
+  height: 100%;
+  padding: 20px;
+}
+
+.laundry-management-shell .laundry-operation-actions {
+  margin-top: auto;
+}
+
+.laundry-management-shell .laundry-operation-actions .secondary-action,
+.laundry-management-shell .laundry-operation-actions .primary-action,
+.laundry-management-shell .laundry-operation-actions .danger-action {
+  min-height: 46px;
 }
 
 .laundry-transfer-form .primary-action,
@@ -2248,6 +2342,7 @@ h2 {
   .tea-cafe-header,
   .brew-create-section,
   .laundry-header,
+  .laundry-management-header,
   .laundry-tariff-section,
   .laundry-search-heading,
   .laundry-operation-actions {
@@ -2372,6 +2467,10 @@ h2 {
     padding-top: 32px;
   }
 
+  .laundry-management-state {
+    min-height: 148px;
+  }
+
   .search-form {
     grid-template-columns: 1fr;
   }
@@ -2460,6 +2559,17 @@ h2 {
 
   .laundry-load-grid {
     grid-template-columns: 1fr;
+  }
+
+  .laundry-management-shell .laundry-operation-list {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .laundry-management-shell .laundry-operation-card > .laundry-load-card,
+  .laundry-management-shell .laundry-operation-summary > .laundry-load-card,
+  .laundry-operation-actions {
+    padding: 16px;
   }
 
   .laundry-run-card-details {

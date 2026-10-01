@@ -82,12 +82,19 @@ export default async function LaundryManagementPage() {
         </nav>
 
         <header className="laundry-management-header">
-          <p className="eyebrow">Laundry operasyonu</p>
-          <h1>Makine ve yük yönetimi</h1>
-          <p className="intro">
-            Kullanıcıyı telefonuyla seç, yalnız boş makinelerde işlem başlat.
-            Aktarım yeni bir ücret tahsil eder; iade tüm yükü kapsar.
-          </p>
+          <div>
+            <p className="eyebrow">Laundry operasyonu</p>
+            <h1>Makine ve yük yönetimi</h1>
+            <p className="intro">
+              Kullanıcıyı telefonuyla seç, yalnız boş makinelerde işlem başlat.
+              Aktarım yeni bir ücret tahsil eder; iade tüm yükü kapsar.
+            </p>
+          </div>
+          <aside className="laundry-management-state" aria-label="Canlı durum">
+            <span>Şu anda</span>
+            <strong>{management?.activeLoads.length ?? 0} aktif yük</strong>
+            <small>İşlemler görevli tarafından yönetilir.</small>
+          </aside>
         </header>
 
         {!management ? (
