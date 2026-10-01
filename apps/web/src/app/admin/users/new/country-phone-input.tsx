@@ -38,9 +38,17 @@ function countryName(country: CountryCode): string {
 
 interface CountryPhoneInputProps {
   error?: string;
+  label?: string;
+  phoneFieldName?: string;
+  showHelperText?: boolean;
 }
 
-export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
+export function CountryPhoneInput({
+  error,
+  label = 'Telefon numarası',
+  phoneFieldName = 'phoneE164',
+  showHelperText = true,
+}: CountryPhoneInputProps) {
   const inputId = useId();
   const hintId = `${inputId}-hint`;
   const inputRef = useRef<HTMLInputElement>(null);
@@ -111,10 +119,11 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
     country === DEFAULT_COUNTRY
       ? 'Türkiye (+90) seçili. 555 ile başlayan kısmı yazın.'
       : `${countryName(country)} (+${callingCode}) seçili. Ülke kodunu yazmadan girin.`;
+  const describedBy = error || showHelperText ? hintId : undefined;
 
   return (
     <div className="phone-field">
-      <label htmlFor={inputId}>Telefon numarası</label>
+      <label htmlFor={inputId}>{label}</label>
       <div className="phone-input-group">
         <select
           className="phone-country-select"
@@ -142,7 +151,7 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
             placeholder={
               country === DEFAULT_COUNTRY ? '555 111 22 33' : 'Telefon numarası'
             }
-            aria-describedby={hintId}
+            aria-describedby={describedBy}
             aria-invalid={error ? 'true' : undefined}
             value={formattedNationalNumber}
             onChange={(event) => handlePhoneChange(event.target.value)}
@@ -151,8 +160,13 @@ export function CountryPhoneInput({ error }: CountryPhoneInputProps) {
         </div>
       </div>
 
-      <input type="hidden" name="phoneE164" value={e164Number} readOnly />
-      <small id={hintId}>{error ?? helperText}</small>
+      <input
+        type="hidden"
+        name={phoneFieldName}
+        value={e164Number}
+        readOnly
+      />
+      {showHelperText ? <small id={hintId}>{error ?? helperText}</small> : null}
     </div>
   );
 }
