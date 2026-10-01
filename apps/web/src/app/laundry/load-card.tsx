@@ -27,14 +27,13 @@ function machineIcon(run: LaundryRun) {
 
 function remainingLabel(totalSeconds: number): string {
   if (totalSeconds <= 0) return 'Hazır';
-  const hours = Math.floor(totalSeconds / 3_600);
-  const minutes = Math.floor((totalSeconds % 3_600) / 60);
-  const seconds = totalSeconds % 60;
-  if (hours > 0)
-    return `${hours} saat ${minutes} dk ${String(seconds).padStart(2, '0')} sn`;
-  if (minutes > 0)
-    return `${minutes} dk ${String(seconds).padStart(2, '0')} sn`;
-  return `${seconds} sn`;
+  const totalMinutes = Math.ceil(totalSeconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
+  if (hours > 0) {
+    return minutes > 0 ? `${hours} saat ${minutes} dk` : `${hours} saat`;
+  }
+  return `${minutes} dk`;
 }
 
 function elapsedLabel(ms: number): string {
