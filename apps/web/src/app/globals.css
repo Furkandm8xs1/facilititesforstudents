@@ -1931,6 +1931,152 @@ h2 {
   font-weight: 700;
 }
 
+/* ── Active run cards (tea-cafe style) ── */
+
+.laundry-active-runs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  padding-top: 18px;
+  margin-top: 18px;
+  border-top: 1px solid var(--border);
+}
+
+.laundry-run-card {
+  display: grid;
+  gap: 18px;
+  padding: 22px;
+  background: rgb(255 253 248 / 92%);
+  border: 1px solid #aec8d2;
+  border-radius: 20px;
+  box-shadow: 0 14px 36px rgb(40 85 106 / 8%);
+}
+
+.laundry-run-card-ready {
+  border-color: #9fc7b6;
+}
+
+.laundry-run-card > header {
+  display: flex;
+  gap: 14px;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.laundry-run-type-mark {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  color: #fffaf1;
+  background: #2a6b8a;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  font-weight: 850;
+  place-items: center;
+}
+
+.laundry-run-card-ready .laundry-run-type-mark {
+  background: var(--accent);
+}
+
+.laundry-run-state {
+  width: fit-content;
+  padding: 6px 10px;
+  color: #1e4d6b;
+  background: #daeef6;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 800;
+}
+
+.laundry-run-state-ready {
+  color: var(--accent);
+  background: var(--accent-soft);
+}
+
+.laundry-run-card-copy h3 {
+  margin-bottom: 0;
+  font-size: 1.45rem;
+  letter-spacing: -0.035em;
+}
+
+.laundry-run-countdown {
+  display: grid;
+  gap: 8px;
+}
+
+.laundry-run-countdown > span {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 750;
+}
+
+.laundry-run-countdown > strong {
+  color: #1e4d6b;
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-variant-numeric: tabular-nums;
+  font-weight: 650;
+  letter-spacing: -0.05em;
+}
+
+.laundry-run-card-ready .laundry-run-countdown > strong {
+  color: var(--accent);
+}
+
+.laundry-run-progress {
+  height: 7px;
+  overflow: hidden;
+  background: #d6eaf1;
+  border-radius: 999px;
+}
+
+.laundry-run-progress span {
+  display: block;
+  height: 100%;
+  background: #2a6b8a;
+  border-radius: inherit;
+  transition: width 500ms linear;
+}
+
+.laundry-run-card-ready .laundry-run-progress span {
+  background: var(--accent);
+}
+
+.laundry-run-card-details {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  padding: 14px 0 0;
+  margin: 0;
+  border-top: 1px solid var(--border);
+}
+
+.laundry-run-card-details div {
+  display: grid;
+  gap: 4px;
+}
+
+.laundry-run-card-details dt {
+  color: var(--muted);
+  font-size: 0.74rem;
+  font-weight: 700;
+}
+
+.laundry-run-card-details dd {
+  margin: 0;
+  font-size: 0.95rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 800;
+  line-height: 1.35;
+}
+
+/* ── Laundry load grid (user page) ── */
+
+.laundry-load-grid {
+  display: grid;
+  gap: 18px;
+}
+
 .laundry-management-header {
   padding-bottom: 48px;
   border-bottom: 1px solid var(--border);
@@ -2308,6 +2454,14 @@ h2 {
 
   .laundry-run > div:last-child {
     justify-items: start;
+  }
+
+  .laundry-active-runs {
+    grid-template-columns: 1fr;
+  }
+
+  .laundry-run-card-details {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
   }
 
   .laundry-transfer-form .primary-action,

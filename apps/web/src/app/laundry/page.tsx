@@ -70,7 +70,7 @@ export default async function LaundryPage() {
                 </span>
               </div>
               {overview.activeLoads.length ? (
-                <div className="laundry-load-list">
+                <div className="laundry-load-grid">
                   {overview.activeLoads.map((load) => (
                     <LaundryLoadCard load={load} key={load.id} />
                   ))}
