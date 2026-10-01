@@ -10,7 +10,6 @@ import {
   type LaundryTariffs,
 } from '@/lib/api';
 import { formatTryMinor } from '@/lib/money';
-import { createIdempotencyKey } from '@/lib/idempotency';
 
 import { manageLaundryAction, type LaundryActionState } from '../actions';
 
@@ -39,13 +38,13 @@ export function NewLoadForm({
 
   useEffect(() => {
     if (idempotencyRef.current && !idempotencyRef.current.value) {
-      idempotencyRef.current.value = createIdempotencyKey();
+      idempotencyRef.current.value = crypto.randomUUID();
     }
   }, []);
 
   useEffect(() => {
     if (state.requestId && idempotencyRef.current) {
-      idempotencyRef.current.value = createIdempotencyKey();
+      idempotencyRef.current.value = crypto.randomUUID();
     }
   }, [state.requestId]);
 

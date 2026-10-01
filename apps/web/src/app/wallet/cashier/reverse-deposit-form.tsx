@@ -2,7 +2,6 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 
-import { createIdempotencyKey } from '@/lib/idempotency';
 import { reverseCashDepositAction, type WalletActionState } from './actions';
 
 const initialState: WalletActionState = { status: 'idle', message: '' };
@@ -16,14 +15,14 @@ export function ReverseDepositForm({ entryId }: { entryId: string }) {
 
   useEffect(() => {
     if (idempotencyRef.current) {
-      idempotencyRef.current.value = createIdempotencyKey();
+      idempotencyRef.current.value = crypto.randomUUID();
     }
   }, []);
 
   useEffect(() => {
     if (state.status === 'success') {
       if (idempotencyRef.current) {
-        idempotencyRef.current.value = createIdempotencyKey();
+        idempotencyRef.current.value = crypto.randomUUID();
       }
     }
   }, [state.status, state.message]);

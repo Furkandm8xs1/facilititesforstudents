@@ -10,7 +10,6 @@ import {
   type LaundryTariffs,
 } from '@/lib/api';
 import { formatTryMinor } from '@/lib/money';
-import { createIdempotencyKey } from '@/lib/idempotency';
 
 import { manageLaundryAction, type LaundryActionState } from '../actions';
 import { useLaundryNow } from '../laundry-clock';
@@ -60,22 +59,22 @@ export function LoadOperations({
       transferIdempotencyRef.current &&
       !transferIdempotencyRef.current.value
     ) {
-      transferIdempotencyRef.current.value = createIdempotencyKey();
+      transferIdempotencyRef.current.value = crypto.randomUUID();
     }
     if (refundIdempotencyRef.current && !refundIdempotencyRef.current.value) {
-      refundIdempotencyRef.current.value = createIdempotencyKey();
+      refundIdempotencyRef.current.value = crypto.randomUUID();
     }
   }, []);
 
   useEffect(() => {
     if (transferState.requestId && transferIdempotencyRef.current) {
-      transferIdempotencyRef.current.value = createIdempotencyKey();
+      transferIdempotencyRef.current.value = crypto.randomUUID();
     }
   }, [transferState.requestId]);
 
   useEffect(() => {
     if (refundState.requestId && refundIdempotencyRef.current) {
-      refundIdempotencyRef.current.value = createIdempotencyKey();
+      refundIdempotencyRef.current.value = crypto.randomUUID();
     }
   }, [refundState.requestId]);
 

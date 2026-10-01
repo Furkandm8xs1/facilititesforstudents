@@ -2,10 +2,17 @@
 
 import { useActionState, useEffect, useRef } from 'react';
 
-import { createIdempotencyKey } from '@/lib/idempotency';
 import { placeOrderAction, type OrderActionState } from './actions';
 
 const initialState: OrderActionState = { status: 'idle', message: '' };
+
+function createIdempotencyKey(): string {
+  if (typeof globalThis.crypto?.randomUUID === 'function') {
+    return globalThis.crypto.randomUUID();
+  }
+
+  return `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+}
 
 export function OrderProductForm({
   productId,
