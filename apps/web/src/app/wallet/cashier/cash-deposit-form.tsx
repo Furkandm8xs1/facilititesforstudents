@@ -3,6 +3,7 @@
 import { useActionState, useEffect, useRef } from 'react';
 
 import { createCashDepositAction, type WalletActionState } from './actions';
+import { createIdempotencyKey } from '@/lib/idempotency';
 
 const initialState: WalletActionState = { status: 'idle', message: '' };
 
@@ -16,7 +17,7 @@ export function CashDepositForm({ phoneE164 }: { phoneE164: string }) {
 
   useEffect(() => {
     if (idempotencyRef.current) {
-      idempotencyRef.current.value = crypto.randomUUID();
+      idempotencyRef.current.value = createIdempotencyKey();
     }
   }, []);
 
@@ -24,7 +25,7 @@ export function CashDepositForm({ phoneE164 }: { phoneE164: string }) {
     if (state.status === 'success') {
       formRef.current?.reset();
       if (idempotencyRef.current) {
-        idempotencyRef.current.value = crypto.randomUUID();
+        idempotencyRef.current.value = createIdempotencyKey();
       }
     }
   }, [state.status, state.message]);

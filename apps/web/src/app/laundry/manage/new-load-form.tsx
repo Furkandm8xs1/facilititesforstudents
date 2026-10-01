@@ -12,6 +12,7 @@ import {
 import { formatTryMinor } from '@/lib/money';
 
 import { manageLaundryAction, type LaundryActionState } from '../actions';
+import { createIdempotencyKey } from '@/lib/idempotency';
 
 const initialState: LaundryActionState = { status: 'idle', message: '' };
 
@@ -38,13 +39,13 @@ export function NewLoadForm({
 
   useEffect(() => {
     if (idempotencyRef.current && !idempotencyRef.current.value) {
-      idempotencyRef.current.value = crypto.randomUUID();
+      idempotencyRef.current.value = createIdempotencyKey();
     }
   }, []);
 
   useEffect(() => {
     if (state.requestId && idempotencyRef.current) {
-      idempotencyRef.current.value = crypto.randomUUID();
+      idempotencyRef.current.value = createIdempotencyKey();
     }
   }, [state.requestId]);
 
