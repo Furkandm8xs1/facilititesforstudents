@@ -160,12 +160,7 @@ export function CountryPhoneInput({
         </div>
       </div>
 
-      <input
-        type="hidden"
-        name={phoneFieldName}
-        value={e164Number}
-        readOnly
-      />
+      <input type="hidden" name={phoneFieldName} value={e164Number} readOnly />
       {showHelperText ? <small id={hintId}>{error ?? helperText}</small> : null}
     </div>
   );

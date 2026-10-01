@@ -41,10 +41,7 @@ export function CustomerSearch({
           <h2 id="customer-search-title">Öğrenciyi telefonla bul</h2>
         </div>
         <form action={formAction} className="search-form">
-          <CountryPhoneInput
-            phoneFieldName="phone"
-            showHelperText={false}
-          />
+          <CountryPhoneInput phoneFieldName="phone" showHelperText={false} />
           <button className="primary-action" disabled={pending}>
             {pending ? 'Aranıyor…' : 'Öğrenci ara'}
           </button>
