@@ -1,12 +1,6 @@
 'use client';
 
-import {
-  type KeyboardEvent,
-  useActionState,
-  useEffect,
-  useRef,
-  useState,
-} from 'react';
+import { type KeyboardEvent, useActionState, useState } from 'react';
 
 import {
   getLaundryPriceMinor,
@@ -23,6 +17,19 @@ import { LaundryLoadCard } from '../load-card';
 import { createIdempotencyKey } from '@/lib/idempotency';
 
 const initialState: LaundryActionState = { status: 'idle', message: '' };
+
+function IdempotencyKeyInput() {
+  const [idempotencyKey] = useState(createIdempotencyKey);
+
+  return (
+    <input
+      type="hidden"
+      name="idempotencyKey"
+      value={idempotencyKey}
+      readOnly
+    />
+  );
+}
 
 export function LoadOperations({
   load,
@@ -48,8 +55,6 @@ export function LoadOperations({
     manageLaundryAction,
     initialState,
   );
-  const transferIdempotencyRef = useRef<HTMLInputElement>(null);
-  const refundIdempotencyRef = useRef<HTMLInputElement>(null);
   const matchingMachines = machines.filter(
     (machine) => machine.machineType === machineType,
   );
@@ -61,30 +66,6 @@ export function LoadOperations({
     now > 0 &&
     activeRun !== undefined &&
     new Date(activeRun.readyAt).getTime() <= now;
-
-  useEffect(() => {
-    if (
-      transferIdempotencyRef.current &&
-      !transferIdempotencyRef.current.value
-    ) {
-      transferIdempotencyRef.current.value = createIdempotencyKey();
-    }
-    if (refundIdempotencyRef.current && !refundIdempotencyRef.current.value) {
-      refundIdempotencyRef.current.value = createIdempotencyKey();
-    }
-  }, []);
-
-  useEffect(() => {
-    if (transferState.requestId && transferIdempotencyRef.current) {
-      transferIdempotencyRef.current.value = createIdempotencyKey();
-    }
-  }, [transferState.requestId]);
-
-  useEffect(() => {
-    if (refundState.requestId && refundIdempotencyRef.current) {
-      refundIdempotencyRef.current.value = createIdempotencyKey();
-    }
-  }, [refundState.requestId]);
 
   function toggleOperations() {
     setIsOpen((open) => !open);
@@ -142,10 +123,8 @@ export function LoadOperations({
           <form className="laundry-transfer-form" action={transferAction}>
             <input type="hidden" name="intent" value="transfer" />
             <input type="hidden" name="loadId" value={load.id} />
-            <input
-              ref={transferIdempotencyRef}
-              type="hidden"
-              name="idempotencyKey"
+            <IdempotencyKeyInput
+              key={transferState.requestId ?? 'initial-transfer-key'}
             />
             <label>
               <span>Başka makineye aktar</span>
@@ -197,10 +176,8 @@ export function LoadOperations({
           <form className="laundry-refund-form" action={refundAction}>
             <input type="hidden" name="intent" value="refund" />
             <input type="hidden" name="loadId" value={load.id} />
-            <input
-              ref={refundIdempotencyRef}
-              type="hidden"
-              name="idempotencyKey"
+            <IdempotencyKeyInput
+              key={refundState.requestId ?? 'initial-refund-key'}
             />
             <label>
               <span>Tam iade gerekçesi</span>
