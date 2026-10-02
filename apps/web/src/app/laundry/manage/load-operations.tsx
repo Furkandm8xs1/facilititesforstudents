@@ -1,10 +1,6 @@
 'use client';
 
-import {
-  type KeyboardEvent,
-  useActionState,
-  useState,
-} from 'react';
+import { type KeyboardEvent, useActionState, useState } from 'react';
 
 import {
   getLaundryPriceMinor,

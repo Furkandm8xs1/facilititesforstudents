@@ -97,7 +97,7 @@ export async function manageLaundryAction(
       const machine = {
         machineType: machineType as LaundryMachineType,
         machineNumber,
-        idempotencyKey, 
+        idempotencyKey,
       };
 
       result =
