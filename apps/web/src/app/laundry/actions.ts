@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-
 import { auth } from '@/auth';
 import {
   completeLaundryLoad,
@@ -98,7 +97,7 @@ export async function manageLaundryAction(
       const machine = {
         machineType: machineType as LaundryMachineType,
         machineNumber,
-        idempotencyKey,
+        idempotencyKey, 
       };
 
       result =
