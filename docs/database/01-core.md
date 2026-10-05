@@ -8,55 +8,107 @@ These tables are the hubs of the whole database. Almost every other table
 references `core.user_profile` (who owns / who acted) or `core.service_unit`
 (which service the row belongs to).
 
-## Relationships
+## At a glance
 
-```text
-core.user_service_assignment.user_profile_id  ──►  core.user_profile.id   (N : 1)
-core.user_service_assignment.service_unit_id  ──►  core.service_unit.id   (N : 1)
-```
+| Table                          | Role in the system       | Rows are…                              | Approx. volume                  |
+| ------------------------------ | ------------------------ | -------------------------------------- | ------------------------------- |
+| `core.user_profile`            | **Entity** – a person    | created on first sign-in, never purged | one per Keycloak user           |
+| `core.service_unit`            | **Entity** – a service   | seeded by migrations                   | a handful (canteen, laundry, …) |
+| `core.user_service_assignment` | **Association** (bridge) | reserved for per-unit roles            | user × service unit × role      |
+
+**Why two hubs?** Almost every row must answer two questions: *"who did this /
+who owns this?"* → `user_profile`, and *"which service is this about?"* →
+`service_unit`. Keeping both in `core` lets every service schema stay small and
+independent of the others.
+
+## Entity–relationship diagram
+
+Notation: `PK` primary key, `FK` foreign key, `UK` unique key. Crow's-foot
+symbols: `||` exactly one, `o|` zero or one, `o{` zero or many, `|{` one or many.
 
 ```mermaid
-flowchart LR
-    USA[core.user_service_assignment]
-    UP[core.user_profile]
-    SU[core.service_unit]
+erDiagram
+    USER_PROFILE ||--o{ USER_SERVICE_ASSIGNMENT : "is assigned"
+    SERVICE_UNIT ||--o{ USER_SERVICE_ASSIGNMENT : "has staff"
 
-    USA -->|N : 1 user_profile_id| UP
-    USA -->|N : 1 service_unit_id| SU
+    USER_PROFILE {
+        uuid id PK
+        uuid keycloak_subject UK "Keycloak sub claim"
+        text phone_e164 UK "E.164 phone number"
+        text first_name
+        text last_name
+        text status "ACTIVE, SUSPENDED, DEPARTED"
+        timestamptz created_at
+        timestamptz updated_at
+    }
+
+    SERVICE_UNIT {
+        uuid id PK
+        text code UK "stable machine code"
+        text name
+        text kind "CANTEEN, LAUNDRY, KITCHEN, TEA_CAFE"
+        boolean active
+        timestamptz created_at
+    }
+
+    USER_SERVICE_ASSIGNMENT {
+        uuid user_profile_id PK, FK
+        uuid service_unit_id PK, FK
+        text role_code PK
+        timestamptz created_at
+    }
 ```
 
-`user_service_assignment` is a many-to-many bridge: one user can have several
-roles in several service units, and one service unit can have many users.
+### Reading the diagram
 
-```text
-core.user_profile  ◄──  core.user_service_assignment  ──►  core.service_unit
-        1         N                                    N          1
+| Relationship                                     | Cardinality | Meaning                                                                          |
+| ------------------------------------------------ | ----------- | -------------------------------------------------------------------------------- |
+| `user_profile` → `user_service_assignment`       | 1 : N       | A user may hold many (unit, role) pairs, or none at all.                         |
+| `service_unit` → `user_service_assignment`       | 1 : N       | A service unit may have many staff members, or none yet.                         |
+| `user_profile` ↔ `service_unit` (through bridge) | M : N       | The bridge resolves the many-to-many; its composite PK prevents duplicate roles. |
+
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
+| --- | --- | --- | --- |
+| `core.user_service_assignment.user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `core.user_service_assignment.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+
+### Lifecycle of a user profile
+
+```mermaid
+stateDiagram-v2
+    [*] --> ACTIVE : first sign-in (wallet account auto-created)
+    ACTIVE --> SUSPENDED : administrative block
+    SUSPENDED --> ACTIVE : unblock
+    ACTIVE --> DEPARTED : leaves the organisation
+    SUSPENDED --> DEPARTED : leaves the organisation
 ```
+
+> [!NOTE]
+> The `status` values are restricted by a `CHECK` constraint. The transitions
+> above describe intended usage and are enforced by the API, not the database.
 
 ### Incoming references from other schemas
 
-```text
-wallet.account.user_profile_id                   ──►  core.user_profile.id   (1 : 1)
-wallet.ledger_entry.actor_user_profile_id        ──►  core.user_profile.id   (N : 0..1)
-canteen.product_event.actor_user_profile_id      ──►  core.user_profile.id   (N : 1)
-canteen.customer_order.customer_user_profile_id  ──►  core.user_profile.id   (N : 1)
-canteen.order_event.actor_user_profile_id        ──►  core.user_profile.id   (N : 1)
-tea_cafe.brew.created_by_user_profile_id         ──►  core.user_profile.id   (N : 1)
-tea_cafe.brew.deleted_by_user_profile_id         ──►  core.user_profile.id   (N : 0..1)
-laundry.tariff.updated_by_user_profile_id        ──►  core.user_profile.id   (N : 0..1)
-laundry.load.owner_user_profile_id               ──►  core.user_profile.id   (N : 1)
-laundry.load.created_by_user_profile_id          ──►  core.user_profile.id   (N : 1)
-laundry.machine_run.started_by_user_profile_id   ──►  core.user_profile.id   (N : 1)
-laundry.machine_run.removed_by_user_profile_id   ──►  core.user_profile.id   (N : 0..1)
-laundry.load_event.actor_user_profile_id         ──►  core.user_profile.id   (N : 1)
-
-canteen.store.service_unit_id                    ──►  core.service_unit.id   (1 : 1)
-tea_cafe.brew.service_unit_id                    ──►  core.service_unit.id   (N : 1)
-laundry.tariff.service_unit_id                   ──►  core.service_unit.id   (1 : 1)
-laundry.load.service_unit_id                     ──►  core.service_unit.id   (N : 1)
-
-wallet.ledger_entry.service_code                 ┄┄►  core.service_unit.code (logical, no FK)
-```
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
+| --- | --- | --- | --- |
+| `wallet.account.user_profile_id` | `core.user_profile.id` | 1 : 1 | Foreign key |
+| `wallet.ledger_entry.actor_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `canteen.product_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `canteen.customer_order.customer_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `canteen.order_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `tea_cafe.brew.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `tea_cafe.brew.deleted_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `laundry.tariff.updated_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `laundry.load.owner_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.load.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.machine_run.started_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.machine_run.removed_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `laundry.load_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `canteen.store.service_unit_id` | `core.service_unit.id` | 1 : 1 | Foreign key |
+| `tea_cafe.brew.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+| `laundry.tariff.service_unit_id` | `core.service_unit.id` | 1 : 1 | Foreign key |
+| `laundry.load.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+| `wallet.ledger_entry.service_code` | `core.service_unit.code` | logical, no FK | Logical (no FK) |
 
 ---
 

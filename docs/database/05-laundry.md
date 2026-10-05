@@ -13,74 +13,175 @@ through one or more **machine runs** (wash, then dry, or a transfer to another
 machine). Every step is recorded as a **load event**. Prices come from the
 service unit's **tariff** and are snapshotted onto each run.
 
-## Relationships
+## At a glance
 
-```text
-laundry.tariff.service_unit_id               ──►  core.service_unit.id   (1 : 1, also the PK)
-laundry.tariff.updated_by_user_profile_id    ──►  core.user_profile.id   (N : 0..1)
+| Table                 | Role                               | Mutability                            | Key idea                                         |
+| --------------------- | ---------------------------------- | ------------------------------------- | ------------------------------------------------ |
+| `laundry.tariff`      | **Entity** – current prices        | mutable                               | one row per laundry unit (PK = FK)               |
+| `laundry.load`        | **Entity** – a customer's batch    | status moves forward only             | `ACTIVE → COMPLETED / REFUNDED`                  |
+| `laundry.machine_run` | **Entity** – one stay in a machine | one-way `IN_MACHINE → REMOVED`        | price snapshot, fixed 2 h 30 min timer           |
+| `laundry.load_event`  | **Event** – load timeline          | immutable                             | audit trail, optionally tied to a run            |
 
-laundry.load.service_unit_id                 ──►  core.service_unit.id   (N : 1)
-laundry.load.owner_user_profile_id           ──►  core.user_profile.id   (N : 1)
-laundry.load.created_by_user_profile_id      ──►  core.user_profile.id   (N : 1)
+**Design principles**
 
-laundry.machine_run.load_id                  ──►  laundry.load.id        (N : 1)
-laundry.machine_run.started_by_user_profile_id ──► core.user_profile.id  (N : 1)
-laundry.machine_run.removed_by_user_profile_id ──► core.user_profile.id  (N : 0..1)
+- **A machine holds one load, and a load sits in one machine** – both enforced by
+  partial unique indexes on `status = 'IN_MACHINE'`, not by application code.
+- **History is never rewritten.** Runs can only be marked `REMOVED` once; events
+  cannot be changed or deleted.
+- **Price snapshot.** `tariff` may change tomorrow; a run keeps the price it was
+  started with.
 
-laundry.load_event.load_id                   ──►  laundry.load.id        (N : 1)
-laundry.load_event.run_id                    ──►  laundry.machine_run.id (N : 0..1)
-laundry.load_event.actor_user_profile_id     ──►  core.user_profile.id   (N : 1)
-```
+## Entity–relationship diagram
 
-Incoming logical references:
-
-```text
-wallet.ledger_entry.reference_id  ┄┄►  laundry.machine_run.id   (service_code = 'laundry-main', HOLD / CAPTURE per run)
-wallet.ledger_entry.reference_id  ┄┄►  laundry.load.id          (service_code = 'laundry-main', SERVICE_REFUND for the whole load)
-```
+Notation: `PK` primary key, `FK` foreign key, `UK` unique key. Dotted
+relationships are logical (no database foreign key).
 
 ```mermaid
-flowchart LR
-    SU[core.service_unit]
-    UP[core.user_profile]
-    WL[wallet.ledger_entry]
+erDiagram
+    SERVICE_UNIT ||--o| TARIFF : "priced by (1:1)"
+    USER_PROFILE |o--o{ TARIFF : "updates"
 
-    subgraph laundry
-        LT[laundry.tariff]
-        LL[laundry.load]
-        LR[laundry.machine_run]
-        LE[laundry.load_event]
-    end
+    SERVICE_UNIT ||--o{ LOAD : "processes"
+    USER_PROFILE ||--o{ LOAD : "owns (pays)"
+    USER_PROFILE ||--o{ LOAD : "creates (operator)"
 
-    LT -->|1 : 1 service_unit_id| SU
-    LT -->|N : 0..1 updated_by_user_profile_id| UP
+    LOAD ||--o{ MACHINE_RUN : "passes through"
+    USER_PROFILE ||--o{ MACHINE_RUN : "starts"
+    USER_PROFILE |o--o{ MACHINE_RUN : "removes"
 
-    LL -->|N : 1 service_unit_id| SU
-    LL -->|N : 1 owner_user_profile_id| UP
-    LL -->|N : 1 created_by_user_profile_id| UP
+    LOAD ||--|{ LOAD_EVENT : "has timeline"
+    MACHINE_RUN |o--o{ LOAD_EVENT : "may cause"
+    USER_PROFILE ||--o{ LOAD_EVENT : "performs"
 
-    LR -->|N : 1 load_id| LL
-    LR -->|N : 1 started_by_user_profile_id| UP
-    LR -->|N : 0..1 removed_by_user_profile_id| UP
+    MACHINE_RUN ||..o{ LEDGER_ENTRY : "reference_id: HOLD / CAPTURE"
+    LOAD ||..o{ LEDGER_ENTRY : "reference_id: SERVICE_REFUND"
 
-    LE -->|N : 1 load_id| LL
-    LE -->|N : 0..1 run_id| LR
-    LE -->|N : 1 actor_user_profile_id| UP
+    TARIFF {
+        uuid service_unit_id PK, FK
+        bigint wash_price_minor "default 1500"
+        bigint dry_price_minor "default 1000"
+        timestamptz updated_at
+        uuid updated_by_user_profile_id FK "nullable"
+    }
 
-    WL -.->|reference_id| LR
-    WL -.->|reference_id| LL
+    LOAD {
+        uuid id PK
+        uuid service_unit_id FK
+        uuid owner_user_profile_id FK
+        text status "ACTIVE, COMPLETED, REFUNDED"
+        text create_idempotency_key UK
+        uuid created_by_user_profile_id FK
+        timestamptz created_at
+        timestamptz completed_at "nullable"
+        timestamptz refunded_at "nullable"
+        text refund_reason "nullable"
+        text refund_idempotency_key UK "nullable"
+    }
+
+    MACHINE_RUN {
+        uuid id PK
+        uuid load_id FK
+        text machine_type "WASH, DRY"
+        integer machine_number "WASH 1-7, DRY 1-8"
+        text status "IN_MACHINE, REMOVED"
+        bigint price_minor "tariff snapshot"
+        text idempotency_key UK
+        uuid started_by_user_profile_id FK
+        timestamptz started_at
+        integer duration_seconds "9000"
+        timestamptz ready_at "started_at + duration"
+        uuid removed_by_user_profile_id FK "nullable"
+        timestamptz removed_at "nullable"
+    }
+
+    LOAD_EVENT {
+        uuid id PK
+        uuid load_id FK
+        uuid run_id FK "nullable"
+        text event_type
+        uuid actor_user_profile_id FK
+        jsonb details
+        timestamptz created_at
+    }
 ```
 
-Containment chain:
+### Reading the diagram
 
-```text
-laundry.load_event ──run_id (optional)──► laundry.machine_run ──load_id──► laundry.load ──service_unit_id──► core.service_unit
-laundry.load_event ──load_id────────────────────────────────────────────► laundry.load
-```
+| Relationship                       | Cardinality | Meaning                                                                |
+| ---------------------------------- | ----------- | ---------------------------------------------------------------------- |
+| `service_unit` → `tariff`          | 1 : 0..1    | The tariff row shares the unit's id as its primary key.                |
+| `service_unit` → `load`            | 1 : N       | A laundry unit processes many loads.                                   |
+| `user_profile` → `load` (owner)    | 1 : N       | The customer who is charged.                                           |
+| `user_profile` → `load` (creator)  | 1 : N       | The operator who registered the load.                                  |
+| `load` → `machine_run`             | 1 : N       | Wash, dry, or transfers; at most one run is `IN_MACHINE` at a time.    |
+| `load` → `load_event`              | 1 : 1..N    | Starts with `LOAD_CREATED`.                                            |
+| `machine_run` → `load_event`       | 1 : 0..N    | Only run-level events (`RUN_STARTED`, `RUN_REMOVED`) set `run_id`.     |
+
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
+| --- | --- | --- | --- |
+| `laundry.tariff.service_unit_id` | `core.service_unit.id` | 1 : 1, also the PK | Foreign key |
+| `laundry.tariff.updated_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `laundry.load.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+| `laundry.load.owner_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.load.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.machine_run.load_id` | `laundry.load.id` | N : 1 | Foreign key |
+| `laundry.machine_run.started_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `laundry.machine_run.removed_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| `laundry.load_event.load_id` | `laundry.load.id` | N : 1 | Foreign key |
+| `laundry.load_event.run_id` | `laundry.machine_run.id` | N : 0..1 | Foreign key |
+| `laundry.load_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `wallet.ledger_entry.reference_id` | `laundry.machine_run.id` | HOLD / CAPTURE per run | Logical (no FK) |
+| `wallet.ledger_entry.reference_id` | `laundry.load.id` | SERVICE_REFUND for the whole load | Logical (no FK) |
 
 `laundry.tariff` and `laundry.load` are siblings under the same service unit;
 there is no FK between them. The tariff price is copied into
 `machine_run.price_minor` when a run starts.
+
+### State machines
+
+**`laundry.load.status`**
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> ACTIVE
+    ACTIVE --> COMPLETED
+    ACTIVE --> REFUNDED
+```
+
+**`laundry.machine_run.status`**
+
+```mermaid
+stateDiagram-v2
+    direction LR
+    [*] --> IN_MACHINE
+    IN_MACHINE --> REMOVED : once, guarded by trigger
+```
+
+### Typical lifecycle
+
+```mermaid
+sequenceDiagram
+    autonumber
+    participant Op as Operator
+    participant API as API
+    participant L as laundry.load / machine_run / load_event
+    participant W as wallet.ledger_entry
+
+    Op->>API: register load for customer
+    API->>L: INSERT load (ACTIVE) + event LOAD_CREATED
+    Op->>API: start wash machine N
+    API->>L: INSERT machine_run (price from tariff) + event RUN_STARTED
+    API->>W: HOLD then CAPTURE (reference_id = run.id)
+    Op->>API: remove from machine
+    API->>L: run → REMOVED + event RUN_REMOVED
+    Op->>API: start dry machine M
+    API->>L: INSERT machine_run + event RUN_STARTED
+    API->>W: HOLD then CAPTURE
+    Op->>API: complete load
+    API->>L: load → COMPLETED + event LOAD_COMPLETED
+    Note over API,W: alternative: refund → load REFUNDED, SERVICE_REFUND (reference_id = load.id)
+```
 
 ---
 
@@ -122,10 +223,8 @@ Current prices for one laundry service unit. Seeded for `laundry-main`.
 | `COMPLETED` | set            | `NULL`        |                                           |
 | `REFUNDED`  | any            | set           | `refund_reason`, `refund_idempotency_key` |
 
-```text
-ACTIVE ──► COMPLETED
-   └─────► REFUNDED
-```
+Allowed transitions: `ACTIVE` → `COMPLETED` or `ACTIVE` → `REFUNDED`
+(see the state diagram above).
 
 | Index                            | Columns                                             |
 | -------------------------------- | --------------------------------------------------- |
@@ -177,9 +276,9 @@ One stay of a load inside a specific machine.
 | `laundry_machine_run_immutable_history` | `BEFORE DELETE`, row | raises `laundry history is immutable`                                                                                                |
 | `laundry_machine_run_guard_update`      | `BEFORE UPDATE`, row | only allows `IN_MACHINE → REMOVED` while setting `removed_at` / `removed_by_user_profile_id`; every other column must stay unchanged |
 
-```text
-IN_MACHINE ──► REMOVED      (one way, once)
-```
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
+| --- | --- | --- | --- |
+| `IN_MACHINE` | `REMOVED` | one way, once | Foreign key |
 
 Wallet link: starting or transferring a run writes a `HOLD` + `CAPTURE` pair
 with `reference_id = machine_run.id`.
@@ -207,7 +306,10 @@ Immutable timeline of a load.
 
 ### Typical lifecycle
 
-```text
-LOAD_CREATED ──► RUN_STARTED (wash) ──► RUN_REMOVED ──► RUN_STARTED (dry) ──► RUN_REMOVED ──► LOAD_COMPLETED
-                                                                                         └──► LOAD_REFUNDED
-```
+Typical order of `event_type` values for one load:
+
+1. `LOAD_CREATED`
+2. `RUN_STARTED` (wash) → `RUN_REMOVED`
+3. `RUN_STARTED` (dry) → `RUN_REMOVED`
+4. `LOAD_COMPLETED` **or** `LOAD_REFUNDED`
+

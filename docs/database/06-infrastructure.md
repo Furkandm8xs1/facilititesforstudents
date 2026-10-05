@@ -17,9 +17,29 @@ migration file. It records which migration files have already been applied.
 
 None. The table has no foreign keys and nothing references it.
 
-```text
-public.schema_migration      (standalone)
+```mermaid
+erDiagram
+    SCHEMA_MIGRATION {
+        text filename PK "e.g. 007_laundry.sql"
+        timestamptz applied_at
+    }
 ```
+
+### How the runner uses it
+
+```mermaid
+flowchart TD
+    A[List migrations/*.sql sorted by filename] --> B{filename in schema_migration?}
+    B -- yes --> C[Skip]
+    B -- no --> D[BEGIN transaction]
+    D --> E[Run the SQL file]
+    E --> F[INSERT filename into schema_migration]
+    F --> G[COMMIT]
+    E -. error .-> H[ROLLBACK and stop]
+```
+
+Because the filename is inserted in the same transaction as the SQL, a failed
+migration leaves no trace and is retried on the next run.
 
 The runner sorts `apps/api/migrations/*.sql` by filename, skips names already
 present here, runs each new file in its own transaction and inserts its
