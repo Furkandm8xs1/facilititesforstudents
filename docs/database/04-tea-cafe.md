@@ -7,24 +7,69 @@ which also seeds the `tea-cafe-main` service unit and adds `TEA_CAFE` to
 A brew is a timed record of a pot of tea or coffee: when it was started and
 when it will be ready. It has no wallet interaction.
 
-## Relationships
+## At a glance
 
-```text
-tea_cafe.brew.service_unit_id             ──►  core.service_unit.id   (N : 1)
-tea_cafe.brew.created_by_user_profile_id  ──►  core.user_profile.id   (N : 1)
-tea_cafe.brew.deleted_by_user_profile_id  ──►  core.user_profile.id   (N : 0..1)
-```
+| Table           | Role                    | Mutability                  | Key idea                                       |
+| --------------- | ----------------------- | --------------------------- | ---------------------------------------------- |
+| `tea_cafe.brew` | **Entity** – a timed pot | soft-deleted, never updated | a countdown from `started_at` to `ready_at`    |
+
+The schema is intentionally tiny: one table, no wallet interaction, no event
+table. Deleting a brew only sets `deleted_at` / `deleted_by_user_profile_id`,
+so the "who removed it" information is kept on the row itself.
+
+## Entity–relationship diagram
+
+Notation: `PK` primary key, `FK` foreign key. `||` exactly one, `o|` zero or
+one, `o{` zero or many.
 
 ```mermaid
-flowchart LR
-    TB[tea_cafe.brew]
-    SU[core.service_unit]
-    UP[core.user_profile]
+erDiagram
+    SERVICE_UNIT ||--o{ BREW : "hosts"
+    USER_PROFILE ||--o{ BREW : "creates"
+    USER_PROFILE |o--o{ BREW : "deletes"
 
-    TB -->|N : 1 service_unit_id| SU
-    TB -->|N : 1 created_by_user_profile_id| UP
-    TB -->|N : 0..1 deleted_by_user_profile_id| UP
+    BREW {
+        uuid id PK
+        uuid service_unit_id FK
+        text beverage_type "TEA, COFFEE"
+        text note "nullable, 1-80 chars"
+        integer duration_minutes "1-180, TEA = 21"
+        timestamptz started_at
+        timestamptz ready_at "> started_at"
+        uuid created_by_user_profile_id FK
+        timestamptz deleted_at "nullable"
+        uuid deleted_by_user_profile_id FK "nullable"
+    }
 ```
+
+### Reading the diagram
+
+| Relationship                       | Cardinality | Meaning                                                            |
+| ---------------------------------- | ----------- | ------------------------------------------------------------------ |
+| `service_unit` → `brew`            | 1 : N       | A tea & cafe unit hosts many brews over time.                      |
+| `user_profile` → `brew` (creator)  | 1 : N       | Every brew records who started it (mandatory).                     |
+| `user_profile` → `brew` (deleter)  | 1 : 0..N    | Set together with `deleted_at`; both `NULL` while the brew is live. |
+
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
+| --- | --- | --- | --- |
+| `tea_cafe.brew.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+| `tea_cafe.brew.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
+| `tea_cafe.brew.deleted_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+
+### Brew lifecycle
+
+```mermaid
+stateDiagram-v2
+    [*] --> Brewing : insert (now < ready_at)
+    Brewing --> Ready : clock passes ready_at
+    Brewing --> Deleted : soft delete
+    Ready --> Deleted : soft delete
+    Deleted --> [*]
+```
+
+> [!NOTE]
+> `Brewing` and `Ready` are **derived** from `now()` versus `ready_at`; there is
+> no status column. Only `Deleted` is stored (`deleted_at IS NOT NULL`).
 
 ---
 
