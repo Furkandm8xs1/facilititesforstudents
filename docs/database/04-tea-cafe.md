@@ -9,9 +9,9 @@ when it will be ready. It has no wallet interaction.
 
 ## At a glance
 
-| Table           | Role                    | Mutability                  | Key idea                                       |
-| --------------- | ----------------------- | --------------------------- | ---------------------------------------------- |
-| `tea_cafe.brew` | **Entity** – a timed pot | soft-deleted, never updated | a countdown from `started_at` to `ready_at`    |
+| Table           | Role                     | Mutability                  | Key idea                                    |
+| --------------- | ------------------------ | --------------------------- | ------------------------------------------- |
+| `tea_cafe.brew` | **Entity** – a timed pot | soft-deleted, never updated | a countdown from `started_at` to `ready_at` |
 
 The schema is intentionally tiny: one table, no wallet interaction, no event
 table. Deleting a brew only sets `deleted_at` / `deleted_by_user_profile_id`,
@@ -44,17 +44,17 @@ erDiagram
 
 ### Reading the diagram
 
-| Relationship                       | Cardinality | Meaning                                                            |
-| ---------------------------------- | ----------- | ------------------------------------------------------------------ |
-| `service_unit` → `brew`            | 1 : N       | A tea & cafe unit hosts many brews over time.                      |
-| `user_profile` → `brew` (creator)  | 1 : N       | Every brew records who started it (mandatory).                     |
-| `user_profile` → `brew` (deleter)  | 1 : 0..N    | Set together with `deleted_at`; both `NULL` while the brew is live. |
+| Relationship                      | Cardinality | Meaning                                                             |
+| --------------------------------- | ----------- | ------------------------------------------------------------------- |
+| `service_unit` → `brew`           | 1 : N       | A tea & cafe unit hosts many brews over time.                       |
+| `user_profile` → `brew` (creator) | 1 : N       | Every brew records who started it (mandatory).                      |
+| `user_profile` → `brew` (deleter) | 1 : 0..N    | Set together with `deleted_at`; both `NULL` while the brew is live. |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `tea_cafe.brew.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
-| `tea_cafe.brew.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `tea_cafe.brew.deleted_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
+| Child column (holds the reference)         | Referenced column      | Cardinality / note | Type        |
+| ------------------------------------------ | ---------------------- | ------------------ | ----------- |
+| `tea_cafe.brew.service_unit_id`            | `core.service_unit.id` | N : 1              | Foreign key |
+| `tea_cafe.brew.created_by_user_profile_id` | `core.user_profile.id` | N : 1              | Foreign key |
+| `tea_cafe.brew.deleted_by_user_profile_id` | `core.user_profile.id` | N : 0..1           | Foreign key |
 
 ### Brew lifecycle
 

@@ -60,14 +60,14 @@ erDiagram
 
 ### Layers
 
-| Layer                | Tables                                                              | Responsibility                               |
-| -------------------- | ------------------------------------------------------------------- | -------------------------------------------- |
-| **Identity**         | `core.user_profile`, `core.user_service_assignment`                 | who a person is and what they may do         |
-| **Organisation**     | `core.service_unit`                                                 | which services exist                         |
-| **Money**            | `wallet.account`, `wallet.ledger_entry`                             | balances and an immutable journal            |
-| **Service data**     | `canteen.*`, `tea_cafe.brew`, `laundry.*`                           | what each service sells or processes         |
-| **Audit / history**  | `*_event` tables, `wallet.ledger_entry`                             | append-only record of what happened          |
-| **Infrastructure**   | `public.schema_migration`                                           | migration bookkeeping                        |
+| Layer               | Tables                                              | Responsibility                       |
+| ------------------- | --------------------------------------------------- | ------------------------------------ |
+| **Identity**        | `core.user_profile`, `core.user_service_assignment` | who a person is and what they may do |
+| **Organisation**    | `core.service_unit`                                 | which services exist                 |
+| **Money**           | `wallet.account`, `wallet.ledger_entry`             | balances and an immutable journal    |
+| **Service data**    | `canteen.*`, `tea_cafe.brew`, `laundry.*`           | what each service sells or processes |
+| **Audit / history** | `*_event` tables, `wallet.ledger_entry`             | append-only record of what happened  |
+| **Infrastructure**  | `public.schema_migration`                           | migration bookkeeping                |
 
 ### Schema dependency direction
 
@@ -88,20 +88,20 @@ flowchart LR
     wallet -. logical .-> laundry
 ```
 
-Read it as "depends on". The wallet is *used by* canteen and laundry, but the
+Read it as "depends on". The wallet is _used by_ canteen and laundry, but the
 database never enforces it; the API does it within one transaction.
 
 ## Terminology
 
-| Term            | Meaning in this documentation                                                  |
-| --------------- | ------------------------------------------------------------------------------ |
-| **Entity**      | A table describing a real-world thing with its own identity (user, product…).  |
-| **Association** | A bridge table that resolves a many-to-many (`order_item`, `user_service_assignment`). |
-| **Event**       | An append-only table describing something that happened (`*_event`, ledger).   |
-| **Attribute**   | A column of a table.                                                           |
-| **PK / FK / UK**| Primary key / foreign key / unique key.                                        |
-| **Minor units** | Money in kuruş (1 TRY = 100); columns end in `_minor`.                         |
-| **Snapshot**    | A copy of a value taken when a record is created (e.g. price on an order line).|
+| Term             | Meaning in this documentation                                                          |
+| ---------------- | -------------------------------------------------------------------------------------- |
+| **Entity**       | A table describing a real-world thing with its own identity (user, product…).          |
+| **Association**  | A bridge table that resolves a many-to-many (`order_item`, `user_service_assignment`). |
+| **Event**        | An append-only table describing something that happened (`*_event`, ledger).           |
+| **Attribute**    | A column of a table.                                                                   |
+| **PK / FK / UK** | Primary key / foreign key / unique key.                                                |
+| **Minor units**  | Money in kuruş (1 TRY = 100); columns end in `_minor`.                                 |
+| **Snapshot**     | A copy of a value taken when a record is created (e.g. price on an order line).        |
 
 ## How to read the relationship notation
 
@@ -114,27 +114,27 @@ second is the table that is **referenced**.
 | ---------------------------------- | ----------------- | ------------------ | ----------- |
 | `child_table.fk_column`            | `parent_table.id` | N : 1              | Foreign key |
 
-| Value             | Meaning                                                        |
-| ----------------- | -------------------------------------------------------------- |
-| Foreign key       | Real foreign key enforced by PostgreSQL                        |
-| Logical (no FK)   | Reference stored as plain data; **not** enforced by a database FK |
-| `N : 1`           | Many child rows may point to the same parent row               |
-| `1 : 1`           | The FK column is also `UNIQUE` (or the primary key)            |
-| `0..1`            | The FK column is nullable, so the reference is optional        |
+| Value           | Meaning                                                           |
+| --------------- | ----------------------------------------------------------------- |
+| Foreign key     | Real foreign key enforced by PostgreSQL                           |
+| Logical (no FK) | Reference stored as plain data; **not** enforced by a database FK |
+| `N : 1`         | Many child rows may point to the same parent row                  |
+| `1 : 1`         | The FK column is also `UNIQUE` (or the primary key)               |
+| `0..1`          | The FK column is nullable, so the reference is optional           |
 
 ER diagram symbols:
 
-| Symbol / line style | Meaning                |
-| ------------------- | ---------------------- |
-| `PK`                | primary key            |
-| `FK`                | foreign key            |
-| `UK`                | unique key             |
-| solid line          | enforced foreign key   |
-| dotted line         | logical link (no FK)   |
-| bar on the line end | exactly one            |
-| circle + bar        | zero or one            |
-| circle + crow's foot| zero or many           |
-| bar + crow's foot   | one or many            |
+| Symbol / line style  | Meaning              |
+| -------------------- | -------------------- |
+| `PK`                 | primary key          |
+| `FK`                 | foreign key          |
+| `UK`                 | unique key           |
+| solid line           | enforced foreign key |
+| dotted line          | logical link (no FK) |
+| bar on the line end  | exactly one          |
+| circle + bar         | zero or one          |
+| circle + crow's foot | zero or many         |
+| bar + crow's foot    | one or many          |
 
 ## Shared conventions
 

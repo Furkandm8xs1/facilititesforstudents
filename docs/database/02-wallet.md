@@ -7,17 +7,17 @@ to a balance is recorded as an immutable row in `wallet.ledger_entry`.
 
 ## At a glance
 
-| Table                | Role                   | Mutability                         | Key idea                                          |
-| -------------------- | ---------------------- | ---------------------------------- | ------------------------------------------------- |
-| `wallet.account`     | **Entity** – a balance | updated only by the API in a tx    | one row per user: `available` + `held` in kuruş   |
-| `wallet.ledger_entry`| **Event** – a journal  | **append-only** (trigger-enforced) | every balance change, with a reason and a trace   |
+| Table                 | Role                   | Mutability                         | Key idea                                        |
+| --------------------- | ---------------------- | ---------------------------------- | ----------------------------------------------- |
+| `wallet.account`      | **Entity** – a balance | updated only by the API in a tx    | one row per user: `available` + `held` in kuruş |
+| `wallet.ledger_entry` | **Event** – a journal  | **append-only** (trigger-enforced) | every balance change, with a reason and a trace |
 
 **Design principle – double bookkeeping lite.** The balance on `account` is a
 cache of the ledger. If the two ever disagree, the ledger is the truth.
 
 **Why `available` and `held`?** A service charge is a two-step operation. The
-money is first *held* (reserved, so it cannot be spent twice) and only then
-*captured* (consumed) once the service is really started. A failure between the
+money is first _held_ (reserved, so it cannot be spent twice) and only then
+_captured_ (consumed) once the service is really started. A failure between the
 steps can `RELEASE` the hold without losing money.
 
 ## Entity–relationship diagram
@@ -65,32 +65,32 @@ erDiagram
 
 ### Reading the diagram
 
-| Relationship                                  | Cardinality | Meaning                                                                    |
-| --------------------------------------------- | ----------- | -------------------------------------------------------------------------- |
-| `user_profile` → `account`                    | 1 : 1       | Exactly one wallet per user (created by a trigger).                        |
-| `account` → `ledger_entry`                    | 1 : N       | An account's history is the list of its entries.                           |
-| `user_profile` → `ledger_entry` (actor)       | 1 : N (opt) | Who performed the action; `NULL` for system-initiated entries.             |
-| `ledger_entry` → `ledger_entry` (reversal)    | 1 : 0..1    | A correction points at the entry it cancels; `UNIQUE` ⇒ reversed only once. |
+| Relationship                               | Cardinality | Meaning                                                                     |
+| ------------------------------------------ | ----------- | --------------------------------------------------------------------------- |
+| `user_profile` → `account`                 | 1 : 1       | Exactly one wallet per user (created by a trigger).                         |
+| `account` → `ledger_entry`                 | 1 : N       | An account's history is the list of its entries.                            |
+| `user_profile` → `ledger_entry` (actor)    | 1 : N (opt) | Who performed the action; `NULL` for system-initiated entries.              |
+| `ledger_entry` → `ledger_entry` (reversal) | 1 : 0..1    | A correction points at the entry it cancels; `UNIQUE` ⇒ reversed only once. |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `wallet.account.user_profile_id` | `core.user_profile.id` | 1 : 1 | Foreign key |
-| `wallet.ledger_entry.account_id` | `wallet.account.id` | N : 1 | Foreign key |
-| `wallet.ledger_entry.actor_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `wallet.ledger_entry.reversal_of_entry_id` | `wallet.ledger_entry.id` | 0..1 : 0..1, self reference | Foreign key |
+| Child column (holds the reference)          | Referenced column        | Cardinality / note          | Type        |
+| ------------------------------------------- | ------------------------ | --------------------------- | ----------- |
+| `wallet.account.user_profile_id`            | `core.user_profile.id`   | 1 : 1                       | Foreign key |
+| `wallet.ledger_entry.account_id`            | `wallet.account.id`      | N : 1                       | Foreign key |
+| `wallet.ledger_entry.actor_user_profile_id` | `core.user_profile.id`   | N : 0..1                    | Foreign key |
+| `wallet.ledger_entry.reversal_of_entry_id`  | `wallet.ledger_entry.id` | 0..1 : 0..1, self reference | Foreign key |
 
 ### Logical references (no foreign key)
 
 The ledger is shared by several services, so it cannot have a real FK to each
-service table. Instead `service_code` tells you *which table* `reference_id`
+service table. Instead `service_code` tells you _which table_ `reference_id`
 points to:
 
-| `service_code`  | Entry types                | `reference_id` points to  | Granularity                |
-| --------------- | -------------------------- | ------------------------- | -------------------------- |
-| `canteen-main`  | `HOLD`, `CAPTURE`, `SERVICE_REFUND` | `canteen.customer_order.id` | one order           |
-| `laundry-main`  | `HOLD`, `CAPTURE`          | `laundry.machine_run.id`  | one wash / dry run         |
-| `laundry-main`  | `SERVICE_REFUND`           | `laundry.load.id`         | the whole load             |
-| `NULL`          | `CASH_DEPOSIT`, `CASH_DEPOSIT_REVERSAL` | `NULL`       | not tied to a service      |
+| `service_code` | Entry types                             | `reference_id` points to    | Granularity           |
+| -------------- | --------------------------------------- | --------------------------- | --------------------- |
+| `canteen-main` | `HOLD`, `CAPTURE`, `SERVICE_REFUND`     | `canteen.customer_order.id` | one order             |
+| `laundry-main` | `HOLD`, `CAPTURE`                       | `laundry.machine_run.id`    | one wash / dry run    |
+| `laundry-main` | `SERVICE_REFUND`                        | `laundry.load.id`           | the whole load        |
+| `NULL`         | `CASH_DEPOSIT`, `CASH_DEPOSIT_REVERSAL` | `NULL`                      | not tied to a service |
 
 `service_code` itself is a logical link to `core.service_unit.code`.
 
@@ -177,12 +177,12 @@ The table-level `CHECK` constraint enforces these combinations:
 
 ### Typical flows
 
-| Scenario           | Entries written (in order)                                                   | Linked by                                       |
-| ------------------ | ---------------------------------------------------------------------------- | ----------------------------------------------- |
-| Cash deposit       | `CASH_DEPOSIT` (+available)                                                  | –                                               |
-| Deposit correction | `CASH_DEPOSIT_REVERSAL` (-available)                                         | `reversal_of_entry_id` → the original deposit   |
-| Service charge     | `HOLD` (available → held), then `CAPTURE` (-held)                            | same `service_code` + `reference_id`            |
-| Service refund     | `SERVICE_REFUND` (+available)                                                | `service_code` + `reference_id`                 |
+| Scenario           | Entries written (in order)                        | Linked by                                     |
+| ------------------ | ------------------------------------------------- | --------------------------------------------- |
+| Cash deposit       | `CASH_DEPOSIT` (+available)                       | –                                             |
+| Deposit correction | `CASH_DEPOSIT_REVERSAL` (-available)              | `reversal_of_entry_id` → the original deposit |
+| Service charge     | `HOLD` (available → held), then `CAPTURE` (-held) | same `service_code` + `reference_id`          |
+| Service refund     | `SERVICE_REFUND` (+available)                     | `service_code` + `reference_id`               |
 
 `reversal_of_entry_id` is `UNIQUE`, so a deposit can be reversed at most once.
 

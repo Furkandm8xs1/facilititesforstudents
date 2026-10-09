@@ -13,14 +13,14 @@ The tables form two groups that meet at `canteen.product`:
 
 ## At a glance
 
-| Table                   | Group   | Role                             | Mutability                        |
-| ----------------------- | ------- | -------------------------------- | --------------------------------- |
-| `canteen.store`         | Catalog | **Entity** – canteen settings    | mutable (flags)                   |
-| `canteen.product`       | Catalog | **Entity** – a sellable item     | mutable, soft-deleted             |
-| `canteen.product_event` | Catalog | **Event** – catalog audit trail  | immutable                         |
-| `canteen.customer_order`| Orders  | **Entity** – an order header     | only `status` changes             |
-| `canteen.order_item`    | Orders  | **Association** – order ↔ product| immutable snapshot                |
-| `canteen.order_event`   | Orders  | **Event** – status history       | immutable                         |
+| Table                    | Group   | Role                              | Mutability            |
+| ------------------------ | ------- | --------------------------------- | --------------------- |
+| `canteen.store`          | Catalog | **Entity** – canteen settings     | mutable (flags)       |
+| `canteen.product`        | Catalog | **Entity** – a sellable item      | mutable, soft-deleted |
+| `canteen.product_event`  | Catalog | **Event** – catalog audit trail   | immutable             |
+| `canteen.customer_order` | Orders  | **Entity** – an order header      | only `status` changes |
+| `canteen.order_item`     | Orders  | **Association** – order ↔ product | immutable snapshot    |
+| `canteen.order_event`    | Orders  | **Event** – status history        | immutable             |
 
 **Design principles**
 
@@ -116,29 +116,29 @@ erDiagram
 
 ### Reading the diagram
 
-| Relationship                       | Cardinality | Meaning                                                              |
-| ---------------------------------- | ----------- | -------------------------------------------------------------------- |
-| `service_unit` → `store`           | 1 : 0..1    | Each canteen unit has at most one store configuration row.           |
-| `store` → `product`                | 1 : N       | A store owns its catalog.                                            |
-| `product` → `product_event`        | 1 : N       | Every catalog change leaves an audit row.                            |
-| `store` → `customer_order`         | 1 : N       | Orders belong to one store.                                          |
-| `customer_order` → `order_item`    | 1 : 1..N    | An order has at least one line; `(order_id, product_id)` is unique.  |
-| `product` → `order_item`           | 1 : N       | A product can appear in many orders; the line keeps a price snapshot.|
-| `customer_order` → `order_event`   | 1 : 1..N    | At least the creation event exists for every order.                  |
+| Relationship                     | Cardinality | Meaning                                                               |
+| -------------------------------- | ----------- | --------------------------------------------------------------------- |
+| `service_unit` → `store`         | 1 : 0..1    | Each canteen unit has at most one store configuration row.            |
+| `store` → `product`              | 1 : N       | A store owns its catalog.                                             |
+| `product` → `product_event`      | 1 : N       | Every catalog change leaves an audit row.                             |
+| `store` → `customer_order`       | 1 : N       | Orders belong to one store.                                           |
+| `customer_order` → `order_item`  | 1 : 1..N    | An order has at least one line; `(order_id, product_id)` is unique.   |
+| `product` → `order_item`         | 1 : N       | A product can appear in many orders; the line keeps a price snapshot. |
+| `customer_order` → `order_event` | 1 : 1..N    | At least the creation event exists for every order.                   |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `canteen.store.service_unit_id` | `core.service_unit.id` | 1 : 1 | Foreign key |
-| `canteen.product.canteen_id` | `canteen.store.id` | N : 1 | Foreign key |
-| `canteen.product_event.product_id` | `canteen.product.id` | N : 1 | Foreign key |
-| `canteen.product_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `canteen.customer_order.canteen_id` | `canteen.store.id` | N : 1 | Foreign key |
-| `canteen.customer_order.customer_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `canteen.order_item.order_id` | `canteen.customer_order.id` | N : 1 | Foreign key |
-| `canteen.order_item.product_id` | `canteen.product.id` | N : 1 | Foreign key |
-| `canteen.order_event.order_id` | `canteen.customer_order.id` | N : 1 | Foreign key |
-| `canteen.order_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `wallet.ledger_entry.reference_id` | `canteen.customer_order.id` | service_code = 'canteen-main' | Logical (no FK) |
+| Child column (holds the reference)                | Referenced column           | Cardinality / note            | Type            |
+| ------------------------------------------------- | --------------------------- | ----------------------------- | --------------- |
+| `canteen.store.service_unit_id`                   | `core.service_unit.id`      | 1 : 1                         | Foreign key     |
+| `canteen.product.canteen_id`                      | `canteen.store.id`          | N : 1                         | Foreign key     |
+| `canteen.product_event.product_id`                | `canteen.product.id`        | N : 1                         | Foreign key     |
+| `canteen.product_event.actor_user_profile_id`     | `core.user_profile.id`      | N : 1                         | Foreign key     |
+| `canteen.customer_order.canteen_id`               | `canteen.store.id`          | N : 1                         | Foreign key     |
+| `canteen.customer_order.customer_user_profile_id` | `core.user_profile.id`      | N : 1                         | Foreign key     |
+| `canteen.order_item.order_id`                     | `canteen.customer_order.id` | N : 1                         | Foreign key     |
+| `canteen.order_item.product_id`                   | `canteen.product.id`        | N : 1                         | Foreign key     |
+| `canteen.order_event.order_id`                    | `canteen.customer_order.id` | N : 1                         | Foreign key     |
+| `canteen.order_event.actor_user_profile_id`       | `core.user_profile.id`      | N : 1                         | Foreign key     |
+| `wallet.ledger_entry.reference_id`                | `canteen.customer_order.id` | service_code = 'canteen-main' | Logical (no FK) |
 
 ### Order status lifecycle
 

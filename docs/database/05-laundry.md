@@ -15,12 +15,12 @@ service unit's **tariff** and are snapshotted onto each run.
 
 ## At a glance
 
-| Table                 | Role                               | Mutability                            | Key idea                                         |
-| --------------------- | ---------------------------------- | ------------------------------------- | ------------------------------------------------ |
-| `laundry.tariff`      | **Entity** – current prices        | mutable                               | one row per laundry unit (PK = FK)               |
-| `laundry.load`        | **Entity** – a customer's batch    | status moves forward only             | `ACTIVE → COMPLETED / REFUNDED`                  |
-| `laundry.machine_run` | **Entity** – one stay in a machine | one-way `IN_MACHINE → REMOVED`        | price snapshot, fixed 2 h 30 min timer           |
-| `laundry.load_event`  | **Event** – load timeline          | immutable                             | audit trail, optionally tied to a run            |
+| Table                 | Role                               | Mutability                     | Key idea                               |
+| --------------------- | ---------------------------------- | ------------------------------ | -------------------------------------- |
+| `laundry.tariff`      | **Entity** – current prices        | mutable                        | one row per laundry unit (PK = FK)     |
+| `laundry.load`        | **Entity** – a customer's batch    | status moves forward only      | `ACTIVE → COMPLETED / REFUNDED`        |
+| `laundry.machine_run` | **Entity** – one stay in a machine | one-way `IN_MACHINE → REMOVED` | price snapshot, fixed 2 h 30 min timer |
+| `laundry.load_event`  | **Event** – load timeline          | immutable                      | audit trail, optionally tied to a run  |
 
 **Design principles**
 
@@ -107,31 +107,31 @@ erDiagram
 
 ### Reading the diagram
 
-| Relationship                       | Cardinality | Meaning                                                                |
-| ---------------------------------- | ----------- | ---------------------------------------------------------------------- |
-| `service_unit` → `tariff`          | 1 : 0..1    | The tariff row shares the unit's id as its primary key.                |
-| `service_unit` → `load`            | 1 : N       | A laundry unit processes many loads.                                   |
-| `user_profile` → `load` (owner)    | 1 : N       | The customer who is charged.                                           |
-| `user_profile` → `load` (creator)  | 1 : N       | The operator who registered the load.                                  |
-| `load` → `machine_run`             | 1 : N       | Wash, dry, or transfers; at most one run is `IN_MACHINE` at a time.    |
-| `load` → `load_event`              | 1 : 1..N    | Starts with `LOAD_CREATED`.                                            |
-| `machine_run` → `load_event`       | 1 : 0..N    | Only run-level events (`RUN_STARTED`, `RUN_REMOVED`) set `run_id`.     |
+| Relationship                      | Cardinality | Meaning                                                             |
+| --------------------------------- | ----------- | ------------------------------------------------------------------- |
+| `service_unit` → `tariff`         | 1 : 0..1    | The tariff row shares the unit's id as its primary key.             |
+| `service_unit` → `load`           | 1 : N       | A laundry unit processes many loads.                                |
+| `user_profile` → `load` (owner)   | 1 : N       | The customer who is charged.                                        |
+| `user_profile` → `load` (creator) | 1 : N       | The operator who registered the load.                               |
+| `load` → `machine_run`            | 1 : N       | Wash, dry, or transfers; at most one run is `IN_MACHINE` at a time. |
+| `load` → `load_event`             | 1 : 1..N    | Starts with `LOAD_CREATED`.                                         |
+| `machine_run` → `load_event`      | 1 : 0..N    | Only run-level events (`RUN_STARTED`, `RUN_REMOVED`) set `run_id`.  |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `laundry.tariff.service_unit_id` | `core.service_unit.id` | 1 : 1, also the PK | Foreign key |
-| `laundry.tariff.updated_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `laundry.load.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
-| `laundry.load.owner_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.load.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.machine_run.load_id` | `laundry.load.id` | N : 1 | Foreign key |
-| `laundry.machine_run.started_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.machine_run.removed_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `laundry.load_event.load_id` | `laundry.load.id` | N : 1 | Foreign key |
-| `laundry.load_event.run_id` | `laundry.machine_run.id` | N : 0..1 | Foreign key |
-| `laundry.load_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `wallet.ledger_entry.reference_id` | `laundry.machine_run.id` | HOLD / CAPTURE per run | Logical (no FK) |
-| `wallet.ledger_entry.reference_id` | `laundry.load.id` | SERVICE_REFUND for the whole load | Logical (no FK) |
+| Child column (holds the reference)               | Referenced column        | Cardinality / note                | Type            |
+| ------------------------------------------------ | ------------------------ | --------------------------------- | --------------- |
+| `laundry.tariff.service_unit_id`                 | `core.service_unit.id`   | 1 : 1, also the PK                | Foreign key     |
+| `laundry.tariff.updated_by_user_profile_id`      | `core.user_profile.id`   | N : 0..1                          | Foreign key     |
+| `laundry.load.service_unit_id`                   | `core.service_unit.id`   | N : 1                             | Foreign key     |
+| `laundry.load.owner_user_profile_id`             | `core.user_profile.id`   | N : 1                             | Foreign key     |
+| `laundry.load.created_by_user_profile_id`        | `core.user_profile.id`   | N : 1                             | Foreign key     |
+| `laundry.machine_run.load_id`                    | `laundry.load.id`        | N : 1                             | Foreign key     |
+| `laundry.machine_run.started_by_user_profile_id` | `core.user_profile.id`   | N : 1                             | Foreign key     |
+| `laundry.machine_run.removed_by_user_profile_id` | `core.user_profile.id`   | N : 0..1                          | Foreign key     |
+| `laundry.load_event.load_id`                     | `laundry.load.id`        | N : 1                             | Foreign key     |
+| `laundry.load_event.run_id`                      | `laundry.machine_run.id` | N : 0..1                          | Foreign key     |
+| `laundry.load_event.actor_user_profile_id`       | `core.user_profile.id`   | N : 1                             | Foreign key     |
+| `wallet.ledger_entry.reference_id`               | `laundry.machine_run.id` | HOLD / CAPTURE per run            | Logical (no FK) |
+| `wallet.ledger_entry.reference_id`               | `laundry.load.id`        | SERVICE_REFUND for the whole load | Logical (no FK) |
 
 `laundry.tariff` and `laundry.load` are siblings under the same service unit;
 there is no FK between them. The tariff price is copied into
@@ -276,9 +276,9 @@ One stay of a load inside a specific machine.
 | `laundry_machine_run_immutable_history` | `BEFORE DELETE`, row | raises `laundry history is immutable`                                                                                                |
 | `laundry_machine_run_guard_update`      | `BEFORE UPDATE`, row | only allows `IN_MACHINE → REMOVED` while setting `removed_at` / `removed_by_user_profile_id`; every other column must stay unchanged |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `IN_MACHINE` | `REMOVED` | one way, once | Foreign key |
+| Child column (holds the reference) | Referenced column | Cardinality / note | Type        |
+| ---------------------------------- | ----------------- | ------------------ | ----------- |
+| `IN_MACHINE`                       | `REMOVED`         | one way, once      | Foreign key |
 
 Wallet link: starting or transferring a run writes a `HOLD` + `CAPTURE` pair
 with `reference_id = machine_run.id`.
@@ -312,4 +312,3 @@ Typical order of `event_type` values for one load:
 2. `RUN_STARTED` (wash) → `RUN_REMOVED`
 3. `RUN_STARTED` (dry) → `RUN_REMOVED`
 4. `LOAD_COMPLETED` **or** `LOAD_REFUNDED`
-
