@@ -16,8 +16,8 @@ references `core.user_profile` (who owns / who acted) or `core.service_unit`
 | `core.service_unit`            | **Entity** – a service   | seeded by migrations                   | a handful (canteen, laundry, …) |
 | `core.user_service_assignment` | **Association** (bridge) | reserved for per-unit roles            | user × service unit × role      |
 
-**Why two hubs?** Almost every row must answer two questions: *"who did this /
-who owns this?"* → `user_profile`, and *"which service is this about?"* →
+**Why two hubs?** Almost every row must answer two questions: _"who did this /
+who owns this?"_ → `user_profile`, and _"which service is this about?"_ →
 `service_unit`. Keeping both in `core` lets every service schema stay small and
 independent of the others.
 
@@ -67,10 +67,10 @@ erDiagram
 | `service_unit` → `user_service_assignment`       | 1 : N       | A service unit may have many staff members, or none yet.                         |
 | `user_profile` ↔ `service_unit` (through bridge) | M : N       | The bridge resolves the many-to-many; its composite PK prevents duplicate roles. |
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `core.user_service_assignment.user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `core.user_service_assignment.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
+| Child column (holds the reference)             | Referenced column      | Cardinality / note | Type        |
+| ---------------------------------------------- | ---------------------- | ------------------ | ----------- |
+| `core.user_service_assignment.user_profile_id` | `core.user_profile.id` | N : 1              | Foreign key |
+| `core.user_service_assignment.service_unit_id` | `core.service_unit.id` | N : 1              | Foreign key |
 
 ### Lifecycle of a user profile
 
@@ -89,26 +89,26 @@ stateDiagram-v2
 
 ### Incoming references from other schemas
 
-| Child column (holds the reference) | Referenced column | Cardinality / note | Type |
-| --- | --- | --- | --- |
-| `wallet.account.user_profile_id` | `core.user_profile.id` | 1 : 1 | Foreign key |
-| `wallet.ledger_entry.actor_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `canteen.product_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `canteen.customer_order.customer_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `canteen.order_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `tea_cafe.brew.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `tea_cafe.brew.deleted_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `laundry.tariff.updated_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `laundry.load.owner_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.load.created_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.machine_run.started_by_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `laundry.machine_run.removed_by_user_profile_id` | `core.user_profile.id` | N : 0..1 | Foreign key |
-| `laundry.load_event.actor_user_profile_id` | `core.user_profile.id` | N : 1 | Foreign key |
-| `canteen.store.service_unit_id` | `core.service_unit.id` | 1 : 1 | Foreign key |
-| `tea_cafe.brew.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
-| `laundry.tariff.service_unit_id` | `core.service_unit.id` | 1 : 1 | Foreign key |
-| `laundry.load.service_unit_id` | `core.service_unit.id` | N : 1 | Foreign key |
-| `wallet.ledger_entry.service_code` | `core.service_unit.code` | logical, no FK | Logical (no FK) |
+| Child column (holds the reference)                | Referenced column        | Cardinality / note | Type            |
+| ------------------------------------------------- | ------------------------ | ------------------ | --------------- |
+| `wallet.account.user_profile_id`                  | `core.user_profile.id`   | 1 : 1              | Foreign key     |
+| `wallet.ledger_entry.actor_user_profile_id`       | `core.user_profile.id`   | N : 0..1           | Foreign key     |
+| `canteen.product_event.actor_user_profile_id`     | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `canteen.customer_order.customer_user_profile_id` | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `canteen.order_event.actor_user_profile_id`       | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `tea_cafe.brew.created_by_user_profile_id`        | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `tea_cafe.brew.deleted_by_user_profile_id`        | `core.user_profile.id`   | N : 0..1           | Foreign key     |
+| `laundry.tariff.updated_by_user_profile_id`       | `core.user_profile.id`   | N : 0..1           | Foreign key     |
+| `laundry.load.owner_user_profile_id`              | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `laundry.load.created_by_user_profile_id`         | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `laundry.machine_run.started_by_user_profile_id`  | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `laundry.machine_run.removed_by_user_profile_id`  | `core.user_profile.id`   | N : 0..1           | Foreign key     |
+| `laundry.load_event.actor_user_profile_id`        | `core.user_profile.id`   | N : 1              | Foreign key     |
+| `canteen.store.service_unit_id`                   | `core.service_unit.id`   | 1 : 1              | Foreign key     |
+| `tea_cafe.brew.service_unit_id`                   | `core.service_unit.id`   | N : 1              | Foreign key     |
+| `laundry.tariff.service_unit_id`                  | `core.service_unit.id`   | 1 : 1              | Foreign key     |
+| `laundry.load.service_unit_id`                    | `core.service_unit.id`   | N : 1              | Foreign key     |
+| `wallet.ledger_entry.service_code`                | `core.service_unit.code` | logical, no FK     | Logical (no FK) |
 
 ---
 

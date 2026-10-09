@@ -12,20 +12,20 @@ you learn here is exactly what you need to read the API code.
 
 ## Contents
 
-| Part | Topic                                                             | Level        |
-| ---- | ----------------------------------------------------------------- | ------------ |
-| 0    | [Before you start](#part-0--before-you-start)                     | Absolute beginner |
-| 1    | [Reading data](#part-1--reading-data-select)                      | Beginner     |
-| 2    | [Changing data](#part-2--changing-data-insert-update-delete)      | Beginner     |
-| 3    | [Combining tables (joins)](#part-3--combining-tables-joins)       | Beginner+    |
-| 4    | [Summarising data](#part-4--summarising-data-aggregation)         | Intermediate |
-| 5    | [Subqueries and CTEs](#part-5--subqueries-and-ctes)               | Intermediate |
-| 6    | [Window functions](#part-6--window-functions)                     | Advanced     |
-| 7    | [Transactions, locks, idempotency](#part-7--transactions-locks-and-idempotency) | Professional |
-| 8    | [JSON, triggers, constraints](#part-8--json-triggers-and-constraints) | Professional |
-| 9    | [Performance](#part-9--performance-indexes-and-explain)           | Professional |
-| 10   | [Walkthrough of the project's real queries](#part-10--the-projects-real-queries-explained) | Professional |
-| 11   | [Cheat sheet and common mistakes](#part-11--cheat-sheet-and-common-mistakes) | All |
+| Part | Topic                                                                                      | Level             |
+| ---- | ------------------------------------------------------------------------------------------ | ----------------- |
+| 0    | [Before you start](#part-0--before-you-start)                                              | Absolute beginner |
+| 1    | [Reading data](#part-1--reading-data-select)                                               | Beginner          |
+| 2    | [Changing data](#part-2--changing-data-insert-update-delete)                               | Beginner          |
+| 3    | [Combining tables (joins)](#part-3--combining-tables-joins)                                | Beginner+         |
+| 4    | [Summarising data](#part-4--summarising-data-aggregation)                                  | Intermediate      |
+| 5    | [Subqueries and CTEs](#part-5--subqueries-and-ctes)                                        | Intermediate      |
+| 6    | [Window functions](#part-6--window-functions)                                              | Advanced          |
+| 7    | [Transactions, locks, idempotency](#part-7--transactions-locks-and-idempotency)            | Professional      |
+| 8    | [JSON, triggers, constraints](#part-8--json-triggers-and-constraints)                      | Professional      |
+| 9    | [Performance](#part-9--performance-indexes-and-explain)                                    | Professional      |
+| 10   | [Walkthrough of the project's real queries](#part-10--the-projects-real-queries-explained) | Professional      |
+| 11   | [Cheat sheet and common mistakes](#part-11--cheat-sheet-and-common-mistakes)               | All               |
 
 ---
 
@@ -35,13 +35,13 @@ you learn here is exactly what you need to read the API code.
 
 Think of a spreadsheet:
 
-| Spreadsheet word | SQL word | Example in this project                       |
-| ---------------- | -------- | --------------------------------------------- |
-| Workbook         | Database | `hizmet`                                      |
-| Folder of sheets | Schema   | `core`, `wallet`, `canteen`, `laundry`        |
-| Sheet            | Table    | `core.user_profile`                           |
-| A line           | Row      | one person                                    |
-| A column header  | Column   | `first_name`, `phone_e164`                    |
+| Spreadsheet word | SQL word | Example in this project                |
+| ---------------- | -------- | -------------------------------------- |
+| Workbook         | Database | `hizmet`                               |
+| Folder of sheets | Schema   | `core`, `wallet`, `canteen`, `laundry` |
+| Sheet            | Table    | `core.user_profile`                    |
+| A line           | Row      | one person                             |
+| A column header  | Column   | `first_name`, `phone_e164`             |
 
 A table is written `schema.table`, for example `wallet.account`.
 
@@ -152,15 +152,15 @@ JOIN wallet.account a ON a.user_profile_id = p.id;
 SELECT * FROM canteen.product WHERE price_minor >= 1000;
 ```
 
-| Operator                        | Meaning                    | Example                          |
-| ------------------------------- | -------------------------- | -------------------------------- |
-| `=`, `<>` (or `!=`)             | equal, not equal           | `status = 'ACTIVE'`              |
-| `<`, `<=`, `>`, `>=`            | comparisons                | `stock_on_hand > 0`              |
-| `AND`, `OR`, `NOT`              | combine conditions         | `listed AND stock_on_hand > 0`   |
-| `IN (…)`                        | one of several values      | `status IN ('PLACED','READY')`   |
-| `BETWEEN a AND b`               | inclusive range            | `price_minor BETWEEN 500 AND 3000` |
-| `LIKE 'Al%'` / `ILIKE`          | text pattern (`%` = any text); `ILIKE` ignores case | `first_name ILIKE 'a%'` |
-| `IS NULL` / `IS NOT NULL`       | missing / present value    | `archived_at IS NULL`            |
+| Operator                  | Meaning                                             | Example                            |
+| ------------------------- | --------------------------------------------------- | ---------------------------------- |
+| `=`, `<>` (or `!=`)       | equal, not equal                                    | `status = 'ACTIVE'`                |
+| `<`, `<=`, `>`, `>=`      | comparisons                                         | `stock_on_hand > 0`                |
+| `AND`, `OR`, `NOT`        | combine conditions                                  | `listed AND stock_on_hand > 0`     |
+| `IN (…)`                  | one of several values                               | `status IN ('PLACED','READY')`     |
+| `BETWEEN a AND b`         | inclusive range                                     | `price_minor BETWEEN 500 AND 3000` |
+| `LIKE 'Al%'` / `ILIKE`    | text pattern (`%` = any text); `ILIKE` ignores case | `first_name ILIKE 'a%'`            |
+| `IS NULL` / `IS NOT NULL` | missing / present value                             | `archived_at IS NULL`              |
 
 > [!WARNING]
 > `NULL` means **"unknown / no value"**, not zero or empty text. `x = NULL` is
@@ -321,7 +321,7 @@ protects against **SQL injection** and lets PostgreSQL reuse the plan.
 ## Part 3 — Combining tables (joins)
 
 Related data lives in different tables. A **join** lines rows up using a shared
-value, usually *foreign key = primary key*.
+value, usually _foreign key = primary key_.
 
 ```text
 wallet.account.user_profile_id  =  core.user_profile.id
@@ -367,7 +367,7 @@ JOIN core.user_profile  p ON p.id = o.customer_user_profile_id
 JOIN canteen.order_item i ON i.order_id = o.id;
 ```
 
-Read it like a path: *order → who placed it → what was in it*. The ER diagrams show
+Read it like a path: _order → who placed it → what was in it_. The ER diagrams show
 which columns to join on.
 
 ### 3.4 Joining a table to itself
@@ -385,13 +385,13 @@ WHERE original.entry_type = 'CASH_DEPOSIT';
 
 ### Join cheat sheet
 
-| Join         | Keeps                                 | Typical use                       |
-| ------------ | ------------------------------------- | --------------------------------- |
-| `INNER JOIN` | only matching pairs                   | "give me orders with their users" |
-| `LEFT JOIN`  | all left rows, right may be `NULL`    | "users and their orders, if any"  |
-| `RIGHT JOIN` | all right rows (rarely used)          | same as LEFT with sides swapped   |
-| `FULL JOIN`  | everything from both sides            | comparing two lists               |
-| `CROSS JOIN` | every combination                     | generating combinations           |
+| Join         | Keeps                              | Typical use                       |
+| ------------ | ---------------------------------- | --------------------------------- |
+| `INNER JOIN` | only matching pairs                | "give me orders with their users" |
+| `LEFT JOIN`  | all left rows, right may be `NULL` | "users and their orders, if any"  |
+| `RIGHT JOIN` | all right rows (rarely used)       | same as LEFT with sides swapped   |
+| `FULL JOIN`  | everything from both sides         | comparing two lists               |
+| `CROSS JOIN` | every combination                  | generating combinations           |
 
 ---
 
@@ -399,13 +399,13 @@ WHERE original.entry_type = 'CASH_DEPOSIT';
 
 ### 4.1 Aggregate functions
 
-| Function    | Returns                          |
-| ----------- | -------------------------------- |
-| `COUNT(*)`  | number of rows                   |
-| `COUNT(col)`| number of rows where `col` is not NULL |
-| `SUM(col)`  | total                            |
-| `AVG(col)`  | average                          |
-| `MIN` / `MAX` | smallest / largest             |
+| Function      | Returns                                |
+| ------------- | -------------------------------------- |
+| `COUNT(*)`    | number of rows                         |
+| `COUNT(col)`  | number of rows where `col` is not NULL |
+| `SUM(col)`    | total                                  |
+| `AVG(col)`    | average                                |
+| `MIN` / `MAX` | smallest / largest                     |
 
 ```sql
 SELECT COUNT(*) AS products, SUM(stock_on_hand) AS pieces, MAX(price_minor) AS most_expensive
@@ -432,11 +432,11 @@ GROUP BY customer_user_profile_id
 HAVING COUNT(*) >= 3;
 ```
 
-|            | `WHERE`                      | `HAVING`                          |
-| ---------- | ---------------------------- | --------------------------------- |
-| Filters    | individual rows              | whole groups                      |
-| Runs       | **before** grouping          | **after** grouping                |
-| Can use aggregates | no                   | yes                               |
+|                    | `WHERE`             | `HAVING`           |
+| ------------------ | ------------------- | ------------------ |
+| Filters            | individual rows     | whole groups       |
+| Runs               | **before** grouping | **after** grouping |
+| Can use aggregates | no                  | yes                |
 
 ### 4.4 `FILTER` — several conditional totals in one pass (PostgreSQL)
 
@@ -463,15 +463,15 @@ ORDER BY 1;
 SQL is **written** in one order and **evaluated** in another. This explains most
 "why can't I use that here?" errors.
 
-| Step | Clause      | What happens                                  |
-| ---- | ----------- | --------------------------------------------- |
-| 1    | `FROM` / `JOIN` | build the working set of rows             |
-| 2    | `WHERE`     | drop rows                                     |
-| 3    | `GROUP BY`  | form groups                                   |
-| 4    | `HAVING`    | drop groups                                   |
-| 5    | `SELECT`    | compute the output columns (aliases appear here) |
-| 6    | `ORDER BY`  | sort (can use aliases)                        |
-| 7    | `LIMIT`     | cut                                           |
+| Step | Clause          | What happens                                     |
+| ---- | --------------- | ------------------------------------------------ |
+| 1    | `FROM` / `JOIN` | build the working set of rows                    |
+| 2    | `WHERE`         | drop rows                                        |
+| 3    | `GROUP BY`      | form groups                                      |
+| 4    | `HAVING`        | drop groups                                      |
+| 5    | `SELECT`        | compute the output columns (aliases appear here) |
+| 6    | `ORDER BY`      | sort (can use aliases)                           |
+| 7    | `LIMIT`         | cut                                              |
 
 ---
 
@@ -569,11 +569,11 @@ WHERE account_id = $1
 ORDER BY created_at, id;
 ```
 
-| entry_type     | delta  | balance_after |
-| -------------- | ------ | ------------- |
-| `CASH_DEPOSIT` | +50000 | 50000         |
-| `HOLD`         | -3000  | 47000         |
-| `SERVICE_REFUND` | +3000 | 50000        |
+| entry_type       | delta  | balance_after |
+| ---------------- | ------ | ------------- |
+| `CASH_DEPOSIT`   | +50000 | 50000         |
+| `HOLD`           | -3000  | 47000         |
+| `SERVICE_REFUND` | +3000  | 50000         |
 
 ### 6.2 `PARTITION BY` — a separate window per group
 
@@ -586,11 +586,11 @@ FROM canteen.customer_order;
 
 ### 6.3 Ranking functions
 
-| Function       | Behaviour with ties (equal values)  |
-| -------------- | ----------------------------------- |
-| `ROW_NUMBER()` | 1, 2, 3, 4 (always unique)          |
-| `RANK()`       | 1, 2, 2, 4 (gaps after ties)        |
-| `DENSE_RANK()` | 1, 2, 2, 3 (no gaps)                |
+| Function       | Behaviour with ties (equal values) |
+| -------------- | ---------------------------------- |
+| `ROW_NUMBER()` | 1, 2, 3, 4 (always unique)         |
+| `RANK()`       | 1, 2, 2, 4 (gaps after ties)       |
+| `DENSE_RANK()` | 1, 2, 2, 3 (no gaps)               |
 
 ### 6.4 "Top N per group"
 
@@ -634,24 +634,24 @@ and the balance could disagree. In the code this is
 
 **ACID** in plain words:
 
-| Letter | Meaning       | Everyday version                                        |
-| ------ | ------------- | ------------------------------------------------------- |
-| A      | Atomicity     | all steps happen, or none                               |
-| C      | Consistency   | constraints (`CHECK`, `FK`, `UNIQUE`) are never violated |
-| I      | Isolation     | concurrent transactions do not see each other's half-done work |
-| D      | Durability    | after `COMMIT` the data survives a crash                |
+| Letter | Meaning     | Everyday version                                               |
+| ------ | ----------- | -------------------------------------------------------------- |
+| A      | Atomicity   | all steps happen, or none                                      |
+| C      | Consistency | constraints (`CHECK`, `FK`, `UNIQUE`) are never violated       |
+| I      | Isolation   | concurrent transactions do not see each other's half-done work |
+| D      | Durability  | after `COMMIT` the data survives a crash                       |
 
 ### 7.2 The race condition problem
 
 Two requests spend from the same wallet at the same moment (balance 30 TRY, each
 wants 20 TRY):
 
-| Time | Request A                  | Request B                  |
-| ---- | -------------------------- | -------------------------- |
-| 1    | reads balance = 30         |                            |
-| 2    |                            | reads balance = 30         |
-| 3    | 30 ≥ 20 → writes 10        |                            |
-| 4    |                            | 30 ≥ 20 → writes 10        |
+| Time | Request A           | Request B           |
+| ---- | ------------------- | ------------------- |
+| 1    | reads balance = 30  |                     |
+| 2    |                     | reads balance = 30  |
+| 3    | 30 ≥ 20 → writes 10 |                     |
+| 4    |                     | 30 ≥ 20 → writes 10 |
 
 Both succeeded, the user spent 40 TRY of 30. This is a **lost update**.
 
@@ -664,12 +664,12 @@ WHERE user_profile_id = $1
 FOR UPDATE;                      -- other transactions wanting this row must WAIT
 ```
 
-| Time | Request A                         | Request B                                   |
-| ---- | --------------------------------- | ------------------------------------------- |
-| 1    | `FOR UPDATE` → gets the lock, balance 30 |                                      |
-| 2    |                                   | `FOR UPDATE` → **waits**                    |
-| 3    | writes 10, `COMMIT` (lock released) |                                           |
-| 4    |                                   | now reads balance = **10** → "insufficient" |
+| Time | Request A                                | Request B                                   |
+| ---- | ---------------------------------------- | ------------------------------------------- |
+| 1    | `FOR UPDATE` → gets the lock, balance 30 |                                             |
+| 2    |                                          | `FOR UPDATE` → **waits**                    |
+| 3    | writes 10, `COMMIT` (lock released)      |                                             |
+| 4    |                                          | now reads balance = **10** → "insufficient" |
 
 The lock lives until `COMMIT`/`ROLLBACK`. The project uses it in
 [`wallet.repository.ts`](../../apps/api/src/modules/wallet/wallet.repository.ts)
@@ -678,10 +678,10 @@ repositories.
 
 Lock variants you will meet:
 
-| Clause                  | Meaning                                                       |
-| ----------------------- | ------------------------------------------------------------- |
-| `FOR UPDATE`            | exclusive: I will change this row, everyone else waits        |
-| `FOR UPDATE OF account` | lock only the rows of table alias `account` in a join         |
+| Clause                  | Meaning                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------- |
+| `FOR UPDATE`            | exclusive: I will change this row, everyone else waits                                  |
+| `FOR UPDATE OF account` | lock only the rows of table alias `account` in a join                                   |
 | `FOR SHARE`             | shared: nobody may change it while I read, but other readers are fine (`lockMainStore`) |
 
 ### 7.4 Locking in a fixed order avoids deadlocks
@@ -719,9 +719,9 @@ FROM wallet.ledger_entry
 WHERE idempotency_key = $1;
 ```
 
-* **Found and identical** → return the earlier result (`duplicate: true`).
-* **Found but different** → error `IDEMPOTENCY_CONFLICT`.
-* **Not found** → do the work.
+- **Found and identical** → return the earlier result (`duplicate: true`).
+- **Found but different** → error `IDEMPOTENCY_CONFLICT`.
+- **Not found** → do the work.
 
 The `UNIQUE` constraint is the final safety net even if two identical requests
 arrive at exactly the same time.
@@ -770,12 +770,12 @@ JOIN canteen.order_item i ON i.order_id = o.id
 GROUP BY o.id;
 ```
 
-| Function                    | Does                                           |
-| --------------------------- | ---------------------------------------------- |
-| `json_build_object(k, v, …)`| builds one JSON object                         |
-| `json_agg(x)` / `jsonb_agg(x)` | collects many rows into one JSON array      |
-| `'[]'::jsonb`               | an empty JSON array literal                    |
-| `::text`, `::uuid`, `::integer` | convert a value to another type ("cast")   |
+| Function                        | Does                                     |
+| ------------------------------- | ---------------------------------------- |
+| `json_build_object(k, v, …)`    | builds one JSON object                   |
+| `json_agg(x)` / `jsonb_agg(x)`  | collects many rows into one JSON array   |
+| `'[]'::jsonb`                   | an empty JSON array literal              |
+| `::text`, `::uuid`, `::integer` | convert a value to another type ("cast") |
 
 The laundry query uses a **scalar subquery per child table** instead of a join, to
 avoid the "two child tables multiply each other's rows" trap:
@@ -806,14 +806,14 @@ precision is lost.
 
 ### 8.3 Constraints: rules the database enforces
 
-| Constraint       | Meaning                                  | Example in this project                          |
-| ---------------- | ---------------------------------------- | ------------------------------------------------ |
-| `PRIMARY KEY`    | unique, not null row identity            | `id uuid`                                        |
-| `FOREIGN KEY`    | value must exist in another table        | `ledger_entry.account_id → account.id`           |
-| `UNIQUE`         | no two rows share the value              | `phone_e164`, `idempotency_key`                  |
-| `NOT NULL`       | a value is required                      | `first_name`                                     |
-| `CHECK (…)`      | a custom rule on the row                 | `price_minor > 0 AND price_minor % 100 = 0`      |
-| `DEFAULT`        | value used when none is given            | `created_at DEFAULT now()`                       |
+| Constraint    | Meaning                           | Example in this project                     |
+| ------------- | --------------------------------- | ------------------------------------------- |
+| `PRIMARY KEY` | unique, not null row identity     | `id uuid`                                   |
+| `FOREIGN KEY` | value must exist in another table | `ledger_entry.account_id → account.id`      |
+| `UNIQUE`      | no two rows share the value       | `phone_e164`, `idempotency_key`             |
+| `NOT NULL`    | a value is required               | `first_name`                                |
+| `CHECK (…)`   | a custom rule on the row          | `price_minor > 0 AND price_minor % 100 = 0` |
+| `DEFAULT`     | value used when none is given     | `created_at DEFAULT now()`                  |
 
 Try one: `INSERT INTO canteen.product (…, price_minor) VALUES (…, 150)` fails
 because 150 is not a whole lira.
@@ -856,12 +856,12 @@ FOR EACH ROW EXECUTE FUNCTION wallet.reject_ledger_mutation();
 Try `UPDATE wallet.ledger_entry SET reason = 'x';` and you will get the exception.
 Even a bug in the API cannot rewrite financial history.
 
-| Trigger part         | Meaning                                                   |
-| -------------------- | --------------------------------------------------------- |
-| `BEFORE` / `AFTER`   | run before the change (can block it) or after it          |
-| `FOR EACH ROW`       | once per affected row                                     |
-| `NEW` / `OLD`        | the row after / before the change                         |
-| `RAISE EXCEPTION`    | abort the statement with an error                         |
+| Trigger part       | Meaning                                          |
+| ------------------ | ------------------------------------------------ |
+| `BEFORE` / `AFTER` | run before the change (can block it) or after it |
+| `FOR EACH ROW`     | once per affected row                            |
+| `NEW` / `OLD`      | the row after / before the change                |
+| `RAISE EXCEPTION`  | abort the statement with an error                |
 
 ### 8.5 Partial and unique indexes as business rules
 
@@ -873,7 +873,7 @@ CREATE UNIQUE INDEX laundry_active_machine_idx
 ```
 
 A **partial unique index** is unique only for rows matching its `WHERE`. Removed
-runs are ignored, so history can repeat the same machine, but two *active* runs on
+runs are ignored, so history can repeat the same machine, but two _active_ runs on
 one machine are impossible. The rule is enforced even if two operators click at the
 same time.
 
@@ -904,12 +904,12 @@ EXPLAIN ANALYZE
 SELECT * FROM wallet.ledger_entry WHERE account_id = '…' ORDER BY created_at DESC LIMIT 20;
 ```
 
-| You see            | Meaning                                                |
-| ------------------ | ------------------------------------------------------ |
-| `Seq Scan`         | read the whole table (OK for tiny tables, bad for big) |
-| `Index Scan`       | used an index                                          |
-| `actual time=…`    | real milliseconds (only with `ANALYZE`)                |
-| `rows=…`           | rows produced                                          |
+| You see         | Meaning                                                |
+| --------------- | ------------------------------------------------------ |
+| `Seq Scan`      | read the whole table (OK for tiny tables, bad for big) |
+| `Index Scan`    | used an index                                          |
+| `actual time=…` | real milliseconds (only with `ANALYZE`)                |
+| `rows=…`        | rows produced                                          |
 
 > [!WARNING]
 > `EXPLAIN ANALYZE` **really executes** the statement. Wrap `UPDATE`/`DELETE` in
@@ -934,6 +934,7 @@ Each section shows a query taken from the API (simplified) and explains it line 
 line. Open the linked file to see it in context.
 
 ### 10.1 Look up the signed-in user
+
 [`user-profile.repository.ts`](../../apps/api/src/modules/core/user-profile.repository.ts)
 
 ```sql
@@ -958,6 +959,7 @@ Behind the scenes the trigger from §8.4 creates the wallet. The `CHECK` on
 `phone_e164` rejects anything that is not E.164.
 
 ### 10.3 Cash deposit
+
 [`wallet.repository.ts`](../../apps/api/src/modules/wallet/wallet.repository.ts) — `depositCash`
 
 Inside one transaction:
@@ -1009,6 +1011,7 @@ FOR UPDATE OF account, original;
 > This is how accounting ledgers work.
 
 ### 10.5 Charging a service (HOLD then CAPTURE)
+
 `chargeServiceInTransaction`, used by canteen orders and laundry runs.
 
 ```sql
@@ -1031,6 +1034,7 @@ result. The table-level `CHECK` guarantees the signs make sense (`HOLD` must be
 negative-available / positive-held, etc.).
 
 ### 10.6 Placing a canteen order
+
 [`canteen-order.repository.ts`](../../apps/api/src/modules/canteen/canteen-order.repository.ts)
 
 Step by step, all in one transaction:
@@ -1091,6 +1095,7 @@ Before this, the code locks the order **and then** the wallet
 A fixed locking order across all code paths prevents deadlocks.
 
 ### 10.8 Listing orders with their items
+
 `orderSelect` / `listOrders`
 
 ```sql
@@ -1116,6 +1121,7 @@ active orders first (a custom sort order that plain `ORDER BY status` cannot
 express); newest first within each group; max 100 rows.
 
 ### 10.9 Tea & cafe brews
+
 [`tea-cafe.repository.ts`](../../apps/api/src/modules/tea-cafe/tea-cafe.repository.ts)
 
 ```sql
@@ -1151,6 +1157,7 @@ Tricks worth learning here:
 - If `RETURNING` gives zero rows, nothing matched, which the code turns into a "not found" error.
 
 ### 10.10 Laundry: runs, timing and the one-way guard
+
 [`laundry.repository.ts`](../../apps/api/src/modules/laundry/laundry.repository.ts)
 
 ```sql
@@ -1176,11 +1183,11 @@ WHERE id = $1;
 SELECT machine_type, machine_number, load_id FROM laundry.machine_run WHERE status = 'IN_MACHINE';
 ```
 
-| Time function           | Value                                                          |
-| ----------------------- | -------------------------------------------------------------- |
-| `now()`                 | start of the **transaction** (same value all through it)       |
-| `statement_timestamp()` | start of the **current statement**                             |
-| `clock_timestamp()`     | the real clock, changes even inside one statement              |
+| Time function           | Value                                                    |
+| ----------------------- | -------------------------------------------------------- |
+| `now()`                 | start of the **transaction** (same value all through it) |
+| `statement_timestamp()` | start of the **current statement**                       |
+| `clock_timestamp()`     | the real clock, changes even inside one statement        |
 
 Starting a run on an occupied machine fails because of the partial unique index
 `laundry_active_machine_idx` (§8.5). The application does not need an extra check
@@ -1194,6 +1201,7 @@ VALUES ($1, $2, 'RUN_STARTED', $3, $4, clock_timestamp());
 ```
 
 ### 10.11 The migration runner
+
 [`migrate.ts`](../../apps/api/scripts/migrate.ts)
 
 Migrations are plain `.sql` files applied in filename order. The table
@@ -1215,25 +1223,25 @@ running the runner twice does nothing the second time.
 
 ### Quick reference
 
-| I want to…                              | Use                                       |
-| --------------------------------------- | ----------------------------------------- |
-| read columns                            | `SELECT … FROM …`                         |
-| filter rows / groups                    | `WHERE` / `HAVING`                        |
-| sort, take N                            | `ORDER BY … LIMIT n`                      |
-| link tables                             | `JOIN … ON a.fk = b.id`                   |
-| keep rows with no partner               | `LEFT JOIN … WHERE b.id IS NULL` or `NOT EXISTS` |
-| count / total / average                 | `COUNT`, `SUM`, `AVG` + `GROUP BY`        |
-| conditional logic                       | `CASE WHEN … THEN … ELSE … END`           |
-| default for NULL                        | `COALESCE(x, default)`                    |
-| name a step                             | `WITH name AS (…)`                        |
-| latest row per group                    | `DISTINCT ON` or `ROW_NUMBER() … = 1`     |
-| running total, ranking                  | window functions `OVER (…)`               |
-| add / change / remove rows              | `INSERT` / `UPDATE` / `DELETE`            |
-| get generated values back               | `RETURNING`                               |
-| insert or ignore/update                 | `ON CONFLICT`                             |
-| group steps atomically                  | `BEGIN … COMMIT`                          |
-| prevent concurrent double-spend         | `SELECT … FOR UPDATE`                     |
-| build JSON                              | `json_build_object`, `json_agg`           |
+| I want to…                      | Use                                              |
+| ------------------------------- | ------------------------------------------------ |
+| read columns                    | `SELECT … FROM …`                                |
+| filter rows / groups            | `WHERE` / `HAVING`                               |
+| sort, take N                    | `ORDER BY … LIMIT n`                             |
+| link tables                     | `JOIN … ON a.fk = b.id`                          |
+| keep rows with no partner       | `LEFT JOIN … WHERE b.id IS NULL` or `NOT EXISTS` |
+| count / total / average         | `COUNT`, `SUM`, `AVG` + `GROUP BY`               |
+| conditional logic               | `CASE WHEN … THEN … ELSE … END`                  |
+| default for NULL                | `COALESCE(x, default)`                           |
+| name a step                     | `WITH name AS (…)`                               |
+| latest row per group            | `DISTINCT ON` or `ROW_NUMBER() … = 1`            |
+| running total, ranking          | window functions `OVER (…)`                      |
+| add / change / remove rows      | `INSERT` / `UPDATE` / `DELETE`                   |
+| get generated values back       | `RETURNING`                                      |
+| insert or ignore/update         | `ON CONFLICT`                                    |
+| group steps atomically          | `BEGIN … COMMIT`                                 |
+| prevent concurrent double-spend | `SELECT … FOR UPDATE`                            |
+| build JSON                      | `json_build_object`, `json_agg`                  |
 
 ### Useful checks for this database
 
@@ -1267,18 +1275,18 @@ SELECT filename, applied_at FROM public.schema_migration ORDER BY filename;
 
 ### Common mistakes
 
-| Mistake                                         | Why it hurts                                   | Fix                                              |
-| ----------------------------------------------- | ---------------------------------------------- | ------------------------------------------------ |
-| `UPDATE`/`DELETE` without `WHERE`               | changes every row                              | write `WHERE` first, test with `SELECT`, use a transaction |
-| `x = NULL`                                      | never true                                     | `x IS NULL`                                      |
-| `SELECT *` in application code                  | slow, breaks on schema change                  | list columns                                     |
-| joining two child tables then `GROUP BY`        | rows multiply, totals inflate                  | aggregate each child in a subquery/CTE           |
-| `WHERE` on an aggregate (`WHERE COUNT(*) > 1`)  | error: aggregates run after `WHERE`            | use `HAVING`                                     |
-| string-building SQL with user input             | SQL injection                                  | parameters (`$1`)                                |
-| read balance → compute in code → write back     | lost updates under concurrency                 | lock (`FOR UPDATE`) and/or atomic `SET x = x - $1` |
-| function on an indexed column in `WHERE`        | index not used                                 | compare the raw column to a range                |
-| forgetting `ORDER BY` with `LIMIT`              | random rows                                    | always sort first                                |
-| treating money as decimal numbers in JS         | precision loss                                 | `bigint` kuruş and `::text` + `BigInt`           |
+| Mistake                                        | Why it hurts                        | Fix                                                        |
+| ---------------------------------------------- | ----------------------------------- | ---------------------------------------------------------- |
+| `UPDATE`/`DELETE` without `WHERE`              | changes every row                   | write `WHERE` first, test with `SELECT`, use a transaction |
+| `x = NULL`                                     | never true                          | `x IS NULL`                                                |
+| `SELECT *` in application code                 | slow, breaks on schema change       | list columns                                               |
+| joining two child tables then `GROUP BY`       | rows multiply, totals inflate       | aggregate each child in a subquery/CTE                     |
+| `WHERE` on an aggregate (`WHERE COUNT(*) > 1`) | error: aggregates run after `WHERE` | use `HAVING`                                               |
+| string-building SQL with user input            | SQL injection                       | parameters (`$1`)                                          |
+| read balance → compute in code → write back    | lost updates under concurrency      | lock (`FOR UPDATE`) and/or atomic `SET x = x - $1`         |
+| function on an indexed column in `WHERE`       | index not used                      | compare the raw column to a range                          |
+| forgetting `ORDER BY` with `LIMIT`             | random rows                         | always sort first                                          |
+| treating money as decimal numbers in JS        | precision loss                      | `bigint` kuruş and `::text` + `BigInt`                     |
 
 ### Where to go next
 
