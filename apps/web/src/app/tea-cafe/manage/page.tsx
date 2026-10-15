@@ -31,28 +31,12 @@ export default async function TeaCafeManagementPage() {
         </Link>
       </nav>
 
-      <header className="tea-cafe-management-header">
-        <p className="eyebrow">Çayhane servisi</p>
-        <h1>Demlemeleri yönet</h1>
-        <p className="intro">
-          Her yeni demlik veya kahve için ayrı kayıt açabilirsin. Çayın hazır
-          olacağı saat otomatik hesaplanır; kahvenin süresini sen belirlersin.
-        </p>
-      </header>
+      <h1 className="visually-hidden">Demlemeleri yönet</h1>
 
-      <section className="brew-create-section" aria-labelledby="new-brew-title">
-        <div>
-          <p className="eyebrow">Yeni kayıt</p>
-          <h2 id="new-brew-title">Ne demledin?</h2>
-          <p>
-            Aynı anda birden fazla kayıt açık kalabilir. Gerekirse kısa bir not
-            ekleyerek demlikleri birbirinden ayır.
-          </p>
-        </div>
-        <BrewForm />
-      </section>
-
-      <section aria-labelledby="managed-brews-title">
+      <section
+        className="brew-list-section"
+        aria-labelledby="managed-brews-title"
+      >
         <div className="section-heading">
           <div>
             <p className="eyebrow">Aktif liste</p>
@@ -68,6 +52,18 @@ export default async function TeaCafeManagementPage() {
         ) : (
           <BrewList brews={brews} initialNow={initialNow} canDelete />
         )}
+      </section>
+
+      <section className="brew-create-section" aria-labelledby="new-brew-title">
+        <div>
+          <p className="eyebrow">Yeni kayıt</p>
+          <h2 id="new-brew-title">Ne demledin?</h2>
+          <p>
+            Aynı anda birden fazla kayıt açık kalabilir. Gerekirse kısa bir not
+            ekleyerek demlikleri birbirinden ayır.
+          </p>
+        </div>
+        <BrewForm />
       </section>
     </main>
   );
