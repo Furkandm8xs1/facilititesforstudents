@@ -33,7 +33,10 @@ export default async function TeaCafeManagementPage() {
 
       <h1 className="visually-hidden">Demlemeleri yönet</h1>
 
-      <section className="brew-list-section" aria-labelledby="managed-brews-title">
+      <section
+        className="brew-list-section"
+        aria-labelledby="managed-brews-title"
+      >
         <div className="section-heading">
           <div>
             <p className="eyebrow">Aktif liste</p>
