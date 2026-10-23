@@ -1,0 +1,77 @@
+# İzleme stack'i: Telegraf + Prometheus + Grafana + postgres-exporter
+#
+# Uygulama stack'inden (compose.yaml) bağımsız çalışır, ama onun network'üne
+# (hizmet_default) bağlanır; böylece Prometheus `api`, `keycloak`, `postgres`
+# servislerine isimleriyle erişebilir.
+#
+# Başlatma:  docker compose -f compose.monitoring.yaml up -d
+# Durdurma:  docker compose -f compose.monitoring.yaml down
+name: hizmet-monitoring
+
+services:
+  telegraf:
+    image: telegraf:1.35
+    # Docker soketini okuyabilmek için root olarak çalışır (soket salt okunur bağlanır).
+    # İmajın varsayılan entrypoint'i yetkiyi 'telegraf' kullanıcısına düşürdüğü için atlanır.
+    user: root
+    entrypoint: ['telegraf']
+    volumes:
+      - ./infra/monitoring/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    ports:
+      # Sadece bu makineden erişilir. Ham metrikler için: http://localhost:9273/metrics
+      - '127.0.0.1:9273:9273'
+    networks: [hizmet]
+    restart: unless-stopped
+
+  postgres-exporter:
+    image: quay.io/prometheuscommunity/postgres-exporter:v0.17.1
+    environment:
+      DATA_SOURCE_NAME: postgresql://${POSTGRES_USER:-hizmet}:${POSTGRES_PASSWORD:-hizmet_dev_password}@postgres:5432/${POSTGRES_DB:-hizmet}?sslmode=disable
+    networks: [hizmet]
+    restart: unless-stopped
+
+  prometheus:
+    image: prom/prometheus:v3.5.0
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+    volumes:
+      - ./infra/monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    ports:
+      - '127.0.0.1:9090:9090'
+    depends_on:
+      - telegraf
+      - postgres-exporter
+    networks: [hizmet]
+    restart: unless-stopped
+
+  grafana:
+    image: grafana/grafana:12.2.0
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:?GRAFANA_ADMIN_PASSWORD must be set in .env}
+      GF_USERS_ALLOW_SIGN_UP: 'false'
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ./infra/monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./infra/monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    ports:
+      # 3000 portu web uygulaması tarafından kullanılıyor, bu yüzden 3002.
+      - '127.0.0.1:3002:3000'
+    depends_on:
+      - prometheus
+    networks: [hizmet]
+    restart: unless-stopped
+
+networks:
+  hizmet:
+    # compose.yaml'ın oluşturduğu mevcut network.
+    name: hizmet_default
+    external: true
+
+volumes:
+  prometheus_data:
+  grafana_data:
