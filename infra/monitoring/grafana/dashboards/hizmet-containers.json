@@ -16,12 +16,32 @@
       "gridPos": { "h": 7, "w": 12, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "percent", "min": 0, "max": 100, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }, { "color": "orange", "value": 60 }, { "color": "red", "value": 85 }] } },
+        "defaults": {
+          "unit": "percent",
+          "min": 0,
+          "max": 100,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "green", "value": null },
+              { "color": "orange", "value": 60 },
+              { "color": "red", "value": 85 }
+            ]
+          }
+        },
         "overrides": []
       },
-      "options": { "orientation": "horizontal", "displayMode": "gradient", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (container_name) (docker_container_cpu_usage_percent{container_name=~\"hizmet-.+\"})", "legendFormat": "{{container_name}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (container_name) (docker_container_cpu_usage_percent{container_name=~\"hizmet-.+\"})",
+          "legendFormat": "{{container_name}}"
+        }
       ]
     },
     {
@@ -31,12 +51,27 @@
       "gridPos": { "h": 7, "w": 12, "x": 12, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
-        "defaults": { "unit": "bytes", "min": 0, "thresholds": { "mode": "absolute", "steps": [{ "color": "green", "value": null }] } },
+        "defaults": {
+          "unit": "bytes",
+          "min": 0,
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [{ "color": "green", "value": null }]
+          }
+        },
         "overrides": []
       },
-      "options": { "orientation": "horizontal", "displayMode": "gradient", "reduceOptions": { "calcs": ["lastNotNull"] } },
+      "options": {
+        "orientation": "horizontal",
+        "displayMode": "gradient",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (container_name) (docker_container_mem_usage{container_name=~\"hizmet-.+\"})", "legendFormat": "{{container_name}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (container_name) (docker_container_mem_usage{container_name=~\"hizmet-.+\"})",
+          "legendFormat": "{{container_name}}"
+        }
       ]
     },
     {
@@ -45,10 +80,23 @@
       "title": "CPU kullanımı (zaman içinde)",
       "gridPos": { "h": 9, "w": 12, "x": 0, "y": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "percent", "min": 0 }, "overrides": [] },
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": { "unit": "percent", "min": 0 },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "max", "lastNotNull"]
+        }
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (container_name) (docker_container_cpu_usage_percent{container_name=~\"hizmet-.+\"})", "legendFormat": "{{container_name}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (container_name) (docker_container_cpu_usage_percent{container_name=~\"hizmet-.+\"})",
+          "legendFormat": "{{container_name}}"
+        }
       ]
     },
     {
@@ -57,10 +105,23 @@
       "title": "RAM kullanımı (zaman içinde)",
       "gridPos": { "h": 9, "w": 12, "x": 12, "y": 7 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "bytes", "min": 0 }, "overrides": [] },
-      "options": { "legend": { "displayMode": "table", "placement": "bottom", "calcs": ["mean", "max", "lastNotNull"] } },
+      "fieldConfig": {
+        "defaults": { "unit": "bytes", "min": 0 },
+        "overrides": []
+      },
+      "options": {
+        "legend": {
+          "displayMode": "table",
+          "placement": "bottom",
+          "calcs": ["mean", "max", "lastNotNull"]
+        }
+      },
       "targets": [
-        { "refId": "A", "expr": "sum by (container_name) (docker_container_mem_usage{container_name=~\"hizmet-.+\"})", "legendFormat": "{{container_name}}" }
+        {
+          "refId": "A",
+          "expr": "sum by (container_name) (docker_container_mem_usage{container_name=~\"hizmet-.+\"})",
+          "legendFormat": "{{container_name}}"
+        }
       ]
     },
     {
@@ -71,8 +132,16 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": { "defaults": { "unit": "Bps" }, "overrides": [] },
       "targets": [
-        { "refId": "A", "expr": "sum by (container_name) (rate(docker_container_net_rx_bytes{container_name=~\"hizmet-.+\"}[1m]))", "legendFormat": "{{container_name}} rx" },
-        { "refId": "B", "expr": "sum by (container_name) (rate(docker_container_net_tx_bytes{container_name=~\"hizmet-.+\"}[1m]))", "legendFormat": "{{container_name}} tx" }
+        {
+          "refId": "A",
+          "expr": "sum by (container_name) (rate(docker_container_net_rx_bytes{container_name=~\"hizmet-.+\"}[1m]))",
+          "legendFormat": "{{container_name}} rx"
+        },
+        {
+          "refId": "B",
+          "expr": "sum by (container_name) (rate(docker_container_net_tx_bytes{container_name=~\"hizmet-.+\"}[1m]))",
+          "legendFormat": "{{container_name}} tx"
+        }
       ]
     },
     {
@@ -81,9 +150,16 @@
       "title": "PostgreSQL aktif bağlantılar",
       "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
       "datasource": { "type": "prometheus", "uid": "prometheus" },
-      "fieldConfig": { "defaults": { "unit": "short", "min": 0 }, "overrides": [] },
+      "fieldConfig": {
+        "defaults": { "unit": "short", "min": 0 },
+        "overrides": []
+      },
       "targets": [
-        { "refId": "A", "expr": "pg_stat_database_numbackends{datname!~\"template.*\"}", "legendFormat": "{{datname}}" }
+        {
+          "refId": "A",
+          "expr": "pg_stat_database_numbackends{datname!~\"template.*\"}",
+          "legendFormat": "{{datname}}"
+        }
       ]
     },
     {
@@ -94,15 +170,30 @@
       "datasource": { "type": "prometheus", "uid": "prometheus" },
       "fieldConfig": {
         "defaults": {
-          "mappings": [{ "type": "value", "options": { "0": { "text": "DOWN", "color": "red" }, "1": { "text": "UP", "color": "green" } } }],
-          "thresholds": { "mode": "absolute", "steps": [{ "color": "red", "value": null }, { "color": "green", "value": 1 }] }
+          "mappings": [
+            {
+              "type": "value",
+              "options": {
+                "0": { "text": "DOWN", "color": "red" },
+                "1": { "text": "UP", "color": "green" }
+              }
+            }
+          ],
+          "thresholds": {
+            "mode": "absolute",
+            "steps": [
+              { "color": "red", "value": null },
+              { "color": "green", "value": 1 }
+            ]
+          }
         },
         "overrides": []
       },
-      "options": { "colorMode": "background", "reduceOptions": { "calcs": ["lastNotNull"] } },
-      "targets": [
-        { "refId": "A", "expr": "up", "legendFormat": "{{job}}" }
-      ]
+      "options": {
+        "colorMode": "background",
+        "reduceOptions": { "calcs": ["lastNotNull"] }
+      },
+      "targets": [{ "refId": "A", "expr": "up", "legendFormat": "{{job}}" }]
     }
   ]
 }

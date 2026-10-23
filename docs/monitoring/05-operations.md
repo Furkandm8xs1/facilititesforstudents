@@ -20,17 +20,17 @@ The examples below spell out the full command.
 
 ## Quick reference
 
-| Goal                                  | Command                                                                  |
-| ------------------------------------- | ------------------------------------------------------------------------ |
-| Start everything                      | `docker compose -f compose.monitoring.yaml up -d`                        |
-| Stop everything (keep data)           | `docker compose -f compose.monitoring.yaml down`                         |
-| Pause without removing containers     | `docker compose -f compose.monitoring.yaml stop`                         |
-| Resume after `stop`                   | `docker compose -f compose.monitoring.yaml start`                        |
-| Restart one service                   | `docker compose -f compose.monitoring.yaml restart prometheus`           |
-| Apply configuration changes           | `docker compose -f compose.monitoring.yaml up -d --force-recreate <service>` |
-| Show status                           | `docker compose -f compose.monitoring.yaml ps`                           |
-| Follow logs                           | `docker compose -f compose.monitoring.yaml logs -f <service>`            |
-| Stop and delete all metric history    | `docker compose -f compose.monitoring.yaml down -v` (**destructive**)    |
+| Goal                               | Command                                                                      |
+| ---------------------------------- | ---------------------------------------------------------------------------- |
+| Start everything                   | `docker compose -f compose.monitoring.yaml up -d`                            |
+| Stop everything (keep data)        | `docker compose -f compose.monitoring.yaml down`                             |
+| Pause without removing containers  | `docker compose -f compose.monitoring.yaml stop`                             |
+| Resume after `stop`                | `docker compose -f compose.monitoring.yaml start`                            |
+| Restart one service                | `docker compose -f compose.monitoring.yaml restart prometheus`               |
+| Apply configuration changes        | `docker compose -f compose.monitoring.yaml up -d --force-recreate <service>` |
+| Show status                        | `docker compose -f compose.monitoring.yaml ps`                               |
+| Follow logs                        | `docker compose -f compose.monitoring.yaml logs -f <service>`                |
+| Stop and delete all metric history | `docker compose -f compose.monitoring.yaml down -v` (**destructive**)        |
 
 ## Starting
 
@@ -93,11 +93,11 @@ start automatically — **unless** they were stopped manually with
 
 There are three levels, from least to most destructive:
 
-| Command                                                  | Containers     | Shared network `hizmet_default` | Volumes (metric history, Grafana DB) |
-| -------------------------------------------------------- | -------------- | ------------------------------- | ------------------------------------ |
-| `docker compose -f compose.monitoring.yaml stop`         | Kept (stopped) | Untouched                       | Kept                                 |
-| `docker compose -f compose.monitoring.yaml down`         | Removed        | Untouched (owned by the application) | **Kept**                        |
-| `docker compose -f compose.monitoring.yaml down -v`      | Removed        | Untouched                       | **Deleted**                          |
+| Command                                             | Containers     | Shared network `hizmet_default`      | Volumes (metric history, Grafana DB) |
+| --------------------------------------------------- | -------------- | ------------------------------------ | ------------------------------------ |
+| `docker compose -f compose.monitoring.yaml stop`    | Kept (stopped) | Untouched                            | Kept                                 |
+| `docker compose -f compose.monitoring.yaml down`    | Removed        | Untouched (owned by the application) | **Kept**                             |
+| `docker compose -f compose.monitoring.yaml down -v` | Removed        | Untouched                            | **Deleted**                          |
 
 ### Stop temporarily
 
@@ -159,15 +159,15 @@ message is harmless.
 
 What needs which action:
 
-| Change                                              | Action                                                                  |
-| --------------------------------------------------- | ----------------------------------------------------------------------- |
-| `prometheus.yml` (jobs, intervals)                  | `up -d --force-recreate prometheus`                                     |
-| `telegraf.conf`                                     | `up -d --force-recreate telegraf`                                       |
-| Dashboard JSON in `grafana/dashboards/`             | Nothing — Grafana reloads the folder about every 10 seconds             |
-| Grafana provisioning (`datasources/`, `dashboards/*.yml`) | `restart grafana`                                                 |
-| `compose.monitoring.yaml` (ports, volumes, env, entrypoint) | `up -d` (Compose recreates only the changed services)           |
-| `.env` values used by a service                     | `up -d --force-recreate <service>`                                      |
-| New image version                                   | See [Updating images](#updating-images)                                 |
+| Change                                                      | Action                                                      |
+| ----------------------------------------------------------- | ----------------------------------------------------------- |
+| `prometheus.yml` (jobs, intervals)                          | `up -d --force-recreate prometheus`                         |
+| `telegraf.conf`                                             | `up -d --force-recreate telegraf`                           |
+| Dashboard JSON in `grafana/dashboards/`                     | Nothing — Grafana reloads the folder about every 10 seconds |
+| Grafana provisioning (`datasources/`, `dashboards/*.yml`)   | `restart grafana`                                           |
+| `compose.monitoring.yaml` (ports, volumes, env, entrypoint) | `up -d` (Compose recreates only the changed services)       |
+| `.env` values used by a service                             | `up -d --force-recreate <service>`                          |
+| New image version                                           | See [Updating images](#updating-images)                     |
 
 Example — change the scrape interval and apply it:
 
@@ -212,11 +212,11 @@ docker compose -f compose.monitoring.yaml logs --since 10m
 
 Healthy log lines to expect:
 
-| Service     | Healthy sign                                                                 |
-| ----------- | ---------------------------------------------------------------------------- |
-| `telegraf`  | `Listening on http://[::]:9273/metrics`, no `E!` lines                       |
-| `prometheus`| `Server is ready to receive web requests.`                                   |
-| `grafana`   | `HTTP Server Listen`, and provisioning lines for the data source and dashboards |
+| Service      | Healthy sign                                                                    |
+| ------------ | ------------------------------------------------------------------------------- |
+| `telegraf`   | `Listening on http://[::]:9273/metrics`, no `E!` lines                          |
+| `prometheus` | `Server is ready to receive web requests.`                                      |
+| `grafana`    | `HTTP Server Listen`, and provisioning lines for the data source and dashboards |
 
 ### Shell inside a container
 

@@ -6,15 +6,15 @@ stack, in the order in which it occurred. For each problem it records the
 most important one is the cAdvisor failure on Docker Desktop (Problems 2 and 3),
 because it explains why the stack uses Telegraf.
 
-| #   | Problem                                                  | Root cause (short)                                             |
-| --- | -------------------------------------------------------- | -------------------------------------------------------------- |
-| 1   | Dashboard panels show "No data" for CPU/RAM/network      | cAdvisor exported no per-container series                      |
-| 2   | cAdvisor registers no containers                         | Docker Desktop's containerd image store is unsupported by cAdvisor |
-| 3   | cAdvisor cannot reach `docker.sock`                      | Socket was not available through the `/var/run` directory mount |
-| 4   | Telegraf: `permission denied` on `docker.sock`           | The image entrypoint drops root privileges                     |
-| 5   | Keycloak target is `DOWN` with HTTP 404                  | Metrics were not enabled in the running container              |
-| 6   | `telegraf.conf` existed as a directory                   | Docker creates a directory for a missing bind-mount source     |
-| 7   | Other errors to expect                                   | Missing network, missing password, busy ports                  |
+| #   | Problem                                             | Root cause (short)                                                 |
+| --- | --------------------------------------------------- | ------------------------------------------------------------------ |
+| 1   | Dashboard panels show "No data" for CPU/RAM/network | cAdvisor exported no per-container series                          |
+| 2   | cAdvisor registers no containers                    | Docker Desktop's containerd image store is unsupported by cAdvisor |
+| 3   | cAdvisor cannot reach `docker.sock`                 | Socket was not available through the `/var/run` directory mount    |
+| 4   | Telegraf: `permission denied` on `docker.sock`      | The image entrypoint drops root privileges                         |
+| 5   | Keycloak target is `DOWN` with HTTP 404             | Metrics were not enabled in the running container                  |
+| 6   | `telegraf.conf` existed as a directory              | Docker creates a directory for a missing bind-mount source         |
+| 7   | Other errors to expect                              | Missing network, missing password, busy ports                      |
 
 ---
 
@@ -146,11 +146,11 @@ misconfiguration of the stack.
 
 ### Options that were considered
 
-| Option                                                                 | Decision                                                                                      |
-| ---------------------------------------------------------------------- | --------------------------------------------------------------------------------------------- |
+| Option                                                                    | Decision                                                                                                                                                                                       |
+| ------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Disable "Use containerd for pulling and storing images" in Docker Desktop | **Rejected.** Switching image stores changes which images are visible; locally built images (`hizmet-web`, `hizmet-api`) could disappear and need rebuilding. Too risky for a monitoring tool. |
-| Try other cAdvisor versions or flags (`--docker_only=false`, etc.)     | **Rejected.** Not a reliable fix; it would rely on behaviour that may change with each Docker Desktop release. |
-| Read statistics from the **Docker Engine API** instead                 | **Chosen.** The API is the supported public interface and is independent of the storage driver. |
+| Try other cAdvisor versions or flags (`--docker_only=false`, etc.)        | **Rejected.** Not a reliable fix; it would rely on behaviour that may change with each Docker Desktop release.                                                                                 |
+| Read statistics from the **Docker Engine API** instead                    | **Chosen.** The API is the supported public interface and is independent of the storage driver.                                                                                                |
 
 ### Resolution
 
@@ -420,15 +420,15 @@ the regular expression in the dashboard queries.
 
 ## Diagnostic cheat sheet
 
-| Question                                              | Command                                                                                 |
-| ----------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| Are the monitoring containers running?                | `docker compose -f compose.monitoring.yaml ps`                                          |
-| Why did a container fail or restart?                  | `docker compose -f compose.monitoring.yaml logs --tail 50 <service>`                    |
-| Does the source produce data?                         | `curl -s localhost:9273/metrics \| head`                                                |
-| Which targets does Prometheus consider healthy?       | `curl -s localhost:9090/api/v1/targets`, or `http://localhost:9090/targets`             |
-| Does a dashboard query return data?                   | Paste the PromQL into `http://localhost:9090/graph`                                     |
-| Which Docker storage driver is used?                  | `docker info --format '{{.DriverStatus}}'`                                              |
-| Can a container reach another one by name?            | `docker compose -f compose.monitoring.yaml exec prometheus wget -qO- http://telegraf:9273/metrics \| head -3` |
+| Question                                        | Command                                                                                                       |
+| ----------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| Are the monitoring containers running?          | `docker compose -f compose.monitoring.yaml ps`                                                                |
+| Why did a container fail or restart?            | `docker compose -f compose.monitoring.yaml logs --tail 50 <service>`                                          |
+| Does the source produce data?                   | `curl -s localhost:9273/metrics \| head`                                                                      |
+| Which targets does Prometheus consider healthy? | `curl -s localhost:9090/api/v1/targets`, or `http://localhost:9090/targets`                                   |
+| Does a dashboard query return data?             | Paste the PromQL into `http://localhost:9090/graph`                                                           |
+| Which Docker storage driver is used?            | `docker info --format '{{.DriverStatus}}'`                                                                    |
+| Can a container reach another one by name?      | `docker compose -f compose.monitoring.yaml exec prometheus wget -qO- http://telegraf:9273/metrics \| head -3` |
 
 ### Debugging order that worked
 

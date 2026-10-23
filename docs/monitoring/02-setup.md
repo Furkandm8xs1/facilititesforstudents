@@ -7,14 +7,14 @@ Run all commands from the repository root.
 
 ## Requirements
 
-| Requirement                | Why                                                              | How to check                  |
-| -------------------------- | ---------------------------------------------------------------- | ----------------------------- |
-| Docker Desktop (or Engine) | Runs all containers                                              | `docker version`              |
-| Docker Compose v2          | The `docker compose` subcommand and the `name:` top-level key     | `docker compose version`      |
-| Application stack started  | Creates the shared `hizmet_default` network                      | `docker network ls`           |
-| Free local ports           | `3002` (Grafana), `9090` (Prometheus), `9273` (Telegraf)          | `lsof -i :3002 -i :9090 -i :9273` |
-| Internet access (first run) | Pulls four images (Telegraf alone is ≈ 170 MB)                  | —                             |
-| `.env` file                | Holds the Grafana admin password                                 | `ls -la .env`                 |
+| Requirement                 | Why                                                           | How to check                      |
+| --------------------------- | ------------------------------------------------------------- | --------------------------------- |
+| Docker Desktop (or Engine)  | Runs all containers                                           | `docker version`                  |
+| Docker Compose v2           | The `docker compose` subcommand and the `name:` top-level key | `docker compose version`          |
+| Application stack started   | Creates the shared `hizmet_default` network                   | `docker network ls`               |
+| Free local ports            | `3002` (Grafana), `9090` (Prometheus), `9273` (Telegraf)      | `lsof -i :3002 -i :9090 -i :9273` |
+| Internet access (first run) | Pulls four images (Telegraf alone is ≈ 170 MB)                | —                                 |
+| `.env` file                 | Holds the Grafana admin password                              | `ls -la .env`                     |
 
 Measured resource cost of the monitoring stack at idle on the development
 machine (`docker stats`): below 1 % CPU and about 265 MB RAM in total — Grafana
@@ -56,10 +56,10 @@ Keycloak exposes Prometheus metrics only when `KC_METRICS_ENABLED` is set. This
 is the single change to the application's [`compose.yaml`](../../compose.yaml):
 
 ```yaml
-  keycloak:
-    environment:
-      KC_HEALTH_ENABLED: 'true'
-      KC_METRICS_ENABLED: 'true'   # added for monitoring
+keycloak:
+  environment:
+    KC_HEALTH_ENABLED: 'true'
+    KC_METRICS_ENABLED: 'true' # added for monitoring
 ```
 
 Environment variables are read at container creation, so the container must be
@@ -220,15 +220,15 @@ container (eight in total when both stacks are running).
 
 Expected panels:
 
-| Panel                             | What it shows                                              |
-| --------------------------------- | ---------------------------------------------------------- |
-| Anlık CPU (çekirdek %)            | Current CPU per container (100 = one full core)            |
-| Anlık RAM                         | Current memory per container                               |
-| CPU kullanımı (zaman içinde)      | CPU history with mean/max/last in the legend               |
-| RAM kullanımı (zaman içinde)      | Memory history with mean/max/last in the legend            |
-| Network (alınan / gönderilen)     | Receive and transmit rate per container                    |
-| PostgreSQL aktif bağlantılar      | Active connections per database                            |
-| Scrape hedefleri (1 = ayakta)     | UP/DOWN state of every Prometheus target                   |
+| Panel                         | What it shows                                   |
+| ----------------------------- | ----------------------------------------------- |
+| Anlık CPU (çekirdek %)        | Current CPU per container (100 = one full core) |
+| Anlık RAM                     | Current memory per container                    |
+| CPU kullanımı (zaman içinde)  | CPU history with mean/max/last in the legend    |
+| RAM kullanımı (zaman içinde)  | Memory history with mean/max/last in the legend |
+| Network (alınan / gönderilen) | Receive and transmit rate per container         |
+| PostgreSQL aktif bağlantılar  | Active connections per database                 |
+| Scrape hedefleri (1 = ayakta) | UP/DOWN state of every Prometheus target        |
 
 The graphs fill up over the first few minutes. The dashboard refreshes every
 10 seconds.

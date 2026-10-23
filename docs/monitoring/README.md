@@ -21,23 +21,23 @@ All commands in this guide are executed from the **repository root**.
 
 ## What the stack contains
 
-| Compose service     | Image                                              | Responsibility                                                         |
-| ------------------- | -------------------------------------------------- | ---------------------------------------------------------------------- |
-| `telegraf`          | `telegraf:1.35`                                    | Reads per-container CPU, RAM, network and disk I/O from the Docker API |
-| `postgres-exporter` | `quay.io/prometheuscommunity/postgres-exporter`    | Exposes PostgreSQL internals (connections, transactions, sizes)        |
-| `prometheus`        | `prom/prometheus:v3.5.0`                           | Scrapes all metric sources every 15 s and stores them for 15 days      |
-| `grafana`           | `grafana/grafana:12.2.0`                           | Visualizes the metrics; the dashboard is provisioned automatically     |
+| Compose service     | Image                                           | Responsibility                                                         |
+| ------------------- | ----------------------------------------------- | ---------------------------------------------------------------------- |
+| `telegraf`          | `telegraf:1.35`                                 | Reads per-container CPU, RAM, network and disk I/O from the Docker API |
+| `postgres-exporter` | `quay.io/prometheuscommunity/postgres-exporter` | Exposes PostgreSQL internals (connections, transactions, sizes)        |
+| `prometheus`        | `prom/prometheus:v3.5.0`                        | Scrapes all metric sources every 15 s and stores them for 15 days      |
+| `grafana`           | `grafana/grafana:12.2.0`                        | Visualizes the metrics; the dashboard is provisioned automatically     |
 
 Keycloak is also scraped. It exposes its own Prometheus endpoint once
 `KC_METRICS_ENABLED=true` is set.
 
 ## Endpoints
 
-| URL                             | Purpose                            | Reachable from            |
-| ------------------------------- | ---------------------------------- | ------------------------- |
-| `http://localhost:3002`         | Grafana UI (dashboards)            | This machine only         |
-| `http://localhost:9090`         | Prometheus UI (queries, targets)   | This machine only         |
-| `http://localhost:9273/metrics` | Raw Telegraf metrics (debugging)   | This machine only         |
+| URL                             | Purpose                          | Reachable from    |
+| ------------------------------- | -------------------------------- | ----------------- |
+| `http://localhost:3002`         | Grafana UI (dashboards)          | This machine only |
+| `http://localhost:9090`         | Prometheus UI (queries, targets) | This machine only |
+| `http://localhost:9273/metrics` | Raw Telegraf metrics (debugging) | This machine only |
 
 Every published port is bound to `127.0.0.1`. Nothing from the monitoring stack
 is exposed to the local network.

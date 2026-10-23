@@ -50,9 +50,9 @@ configuration of "what is monitored" lives in exactly one place,
 
 The repository contains two independent Compose files:
 
-| File                      | Project name        | Contains                                |
-| ------------------------- | ------------------- | --------------------------------------- |
-| `compose.yaml`            | `hizmet`            | `web`, `api`, `keycloak`, `postgres`    |
+| File                      | Project name        | Contains                                                 |
+| ------------------------- | ------------------- | -------------------------------------------------------- |
+| `compose.yaml`            | `hizmet`            | `web`, `api`, `keycloak`, `postgres`                     |
 | `compose.monitoring.yaml` | `hizmet-monitoring` | `telegraf`, `postgres-exporter`, `prometheus`, `grafana` |
 
 They have separate lifecycles, which means the monitoring stack can be started,
@@ -119,11 +119,11 @@ Port `3000` is already used by the `web` container, so Grafana is published on
 
 ## Data retention and storage
 
-| Data                    | Volume            | Retention / lifetime                     |
-| ----------------------- | ----------------- | ---------------------------------------- |
+| Data                    | Volume            | Retention / lifetime                      |
+| ----------------------- | ----------------- | ----------------------------------------- |
 | Prometheus time series  | `prometheus_data` | 15 days (`--storage.tsdb.retention.time`) |
-| Grafana database        | `grafana_data`    | Until the volume is deleted              |
-| Dashboards, data source | Git repository    | Provisioned from files on every start    |
+| Grafana database        | `grafana_data`    | Until the volume is deleted               |
+| Dashboards, data source | Git repository    | Provisioned from files on every start     |
 
 The dashboard and the Prometheus data source are **provisioned from files**, so
 they are reproducible: deleting the Grafana volume does not lose them.
