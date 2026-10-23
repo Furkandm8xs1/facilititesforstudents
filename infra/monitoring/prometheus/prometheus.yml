@@ -1,0 +1,33 @@
+global:
+  scrape_interval: 15s
+  evaluation_interval: 15s
+
+scrape_configs:
+  # Prometheus'un kendi metrikleri
+  - job_name: prometheus
+    static_configs:
+      - targets: ['localhost:9090']
+
+  # Container CPU / RAM / network / disk (Telegraf, Docker API'sinden okur)
+  - job_name: telegraf
+    static_configs:
+      - targets: ['telegraf:9273']
+
+  # PostgreSQL (bağlantı sayısı, veritabanı boyutu, işlem sayıları...)
+  - job_name: postgres
+    static_configs:
+      - targets: ['postgres-exporter:9187']
+
+  # Keycloak (compose.yaml'da KC_METRICS_ENABLED=true olmalı).
+  # Keycloak 26'da metrikler yönetim portunda (9000) sunulur.
+  - job_name: keycloak
+    metrics_path: /metrics
+    static_configs:
+      - targets: ['keycloak:9000']
+
+  # API mikroservisi: apps/api içine /metrics endpoint'i eklendikten sonra
+  # aşağıdaki bloğun yorumunu kaldır (Faz 2).
+  # - job_name: hizmet-api
+  #   metrics_path: /metrics
+  #   static_configs:
+  #     - targets: ['api:3001']

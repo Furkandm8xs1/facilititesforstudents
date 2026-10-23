@@ -34,6 +34,7 @@ services:
       KC_DB_USERNAME: ${POSTGRES_USER:-hizmet}
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD:-hizmet_dev_password}
       KC_HEALTH_ENABLED: 'true'
+      KC_METRICS_ENABLED: 'true'
       KC_HOSTNAME: ${PUBLIC_KEYCLOAK_URL:?PUBLIC_KEYCLOAK_URL must be set in .env}
     ports:
       - '0.0.0.0:8080:8080'
