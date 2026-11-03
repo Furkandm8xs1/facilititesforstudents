@@ -60,16 +60,6 @@ export default async function Home() {
 
   return (
     <main className="portal-shell">
-      <Image
-        className="portal-brand"
-        src="/icon.png"
-        alt="Suleymaniye"
-        width={1920}
-        height={1080}
-        sizes="(max-width: 520px) 58vw, 280px"
-        priority
-      />
-
       {session.authError ? (
         <p className="session-warning" role="alert">
           Oturum yenilenemedi. Güvenli biçimde yeniden giriş yapmalısın.
