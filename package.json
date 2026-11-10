@@ -2,6 +2,7 @@
   "name": "hizmet",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-only",
   "description": "Yurt hizmetleri portalı",
   "workspaces": [
     "apps/*"
