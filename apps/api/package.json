@@ -2,6 +2,7 @@
   "name": "@hizmet/api",
   "version": "0.1.0",
   "private": true,
+  "license": "GPL-3.0-only",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
